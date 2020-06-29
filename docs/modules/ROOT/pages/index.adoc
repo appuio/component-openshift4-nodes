@@ -1,0 +1,3 @@
+= OpenShift 4 Machine Management: A Commodore component to manage OpenShift 4 Machine Management
+
+{doctitle} is a Commodore component for Managing OpenShift 4 Machine Management.

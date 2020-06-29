@@ -1,0 +1,6 @@
+name: openshift4-nodes
+title: OpenShift 4 Machine Management
+version: master
+start_page: ROOT:index.adoc
+nav:
+  - modules/ROOT/partials/nav.adoc
