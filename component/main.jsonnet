@@ -18,12 +18,21 @@ local machine = function(name, spec) com.namespaced('openshift-machine-api', kub
 local isMultiAz = function(name)
   std.objectHas(params.nodeGroups[name], 'multiAz') && params.nodeGroups[name].multiAz == true;
 
+local zoneId = function(name)
+  std.reverse(std.split(name, '-'))[0];
+
 local machineSpecs = [
   { name: name, spec: params.nodeGroups[name] }
   for name in std.objectFields(params.nodeGroups)
   if !isMultiAz(name)
-
-];
+] + std.flattenArrays([
+  [
+    { name: name + '-' + zoneId(zone), spec: params.nodeGroups[name] }
+    for zone in params.availabilityZones
+  ]
+  for name in std.objectFields(params.nodeGroups)
+  if isMultiAz(name)
+]);
 
 local machines = [
   machine(m.name, m.spec)
