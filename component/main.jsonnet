@@ -8,6 +8,7 @@ local params = inv.parameters.openshift4_nodes;
 
 local machine = function(name, spec)
   local machineSpec = if std.objectHas(spec, 'spec') then spec.spec else {};
+  local type = if std.objectHas(spec, 'type') then spec.type else 'worker';
   com.namespaced('openshift-machine-api', kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
     metadata+: {
       labels+: {
@@ -27,8 +28,8 @@ local machine = function(name, spec)
           creationTimestamp: null,
           labels: {
             'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
-            'machine.openshift.io/cluster-api-machine-role': 'worker',
-            'machine.openshift.io/cluster-api-machine-type': 'worker',
+            'machine.openshift.io/cluster-api-machine-role': type,
+            'machine.openshift.io/cluster-api-machine-type': type,
             'machine.openshift.io/cluster-api-machineset': name,
           },
         },
