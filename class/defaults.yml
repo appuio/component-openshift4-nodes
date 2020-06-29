@@ -1,3 +1,44 @@
 parameters:
   openshift4_nodes:
-    namespace: syn-openshift4-nodes
+    namespace: openshift-machine-api
+    defaultSpecs:
+      aws: {}
+      azure: {}
+      gcp:
+        deletePolicy: Oldest
+        template:
+          spec:
+            metadata:
+              labels: {}
+            providerSpec:
+              value:
+                apiVersion: gcpprovider.openshift.io/v1beta1
+                canIPForward: false
+                credentialsSecret:
+                  name: gcp-cloud-credentials
+                deletionProtection: false
+                disks:
+                - autoDelete: true
+                  boot: true
+                  image: ${openshift4_nodes:infrastructureID}-rhcos-image
+                  labels: null
+                  sizeGb: 128
+                  type: pd-ssd
+                kind: GCPMachineProviderSpec
+                machineType: n1-standard-4
+                metadata:
+                  creationTimestamp: null
+                networkInterfaces:
+                - network: ${openshift4_nodes:infrastructureID}-network
+                  subnetwork: ${openshift4_nodes:infrastructureID}-worker-subnet
+                projectID: ${openshift4_nodes:projectName}
+                region:  ${cloud:region}
+                serviceAccounts:
+                - email: ${openshift4_nodes:infrastructureID}-w@${openshift4_nodes:projectName}.iam.gserviceaccount.com
+                  scopes:
+                  - https://www.googleapis.com/auth/cloud-platform
+                tags: []
+                userDataSecret:
+                  name: worker-user-data
+
+    nodeGroups: {}

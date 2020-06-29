@@ -3,92 +3,51 @@ local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 
-// The hiera parameters for the component
 local params = inv.parameters.openshift4_nodes;
 
-local machine = function(name, spec)
-  local machineSpec = if std.objectHas(spec, 'spec') then spec.spec else {};
-  local type = if std.objectHas(spec, 'type') then spec.type else 'worker';
-  com.namespaced('openshift-machine-api', kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
+local machineSet = function(name, set)
+  local role = if std.objectHas(set, 'role') then set.role else 'worker';
+  kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name)
+  + { spec+: params.defaultSpecs[inv.parameters.cloud.provider] }
+  + {
     metadata+: {
       labels+: {
         'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
       },
+      namespace: params.namespace,
     },
-    spec: {
-      replicas: if std.objectHas(spec, 'replicas') then spec.replicas else 1,
-      selector: {
-        matchLabels: {
+    spec+: {
+      replicas: if std.objectHas(set, 'replicas') then set.replicas else 1,
+      selector+: {
+        matchLabels+: {
           'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
           'machine.openshift.io/cluster-api-machineset': name,
         },
       },
-      template: {
-        metadata: {
-          creationTimestamp: null,
-          labels: {
+      template+: {
+        metadata+: {
+          labels+: {
             'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
-            'machine.openshift.io/cluster-api-machine-role': type,
-            'machine.openshift.io/cluster-api-machine-type': type,
+            'machine.openshift.io/cluster-api-machine-role': role,
+            'machine.openshift.io/cluster-api-machine-type': role,
             'machine.openshift.io/cluster-api-machineset': name,
           },
         },
-        spec: {
-          metadata: {
-            creationTimestamp: null,
-          },
+        spec+: {
           providerSpec+: {
             value+: {
-              apiVersion: 'gcpprovider.openshift.io/v1beta1',
-              canIPForward: false,
-              credentialsSecret: {
-                name: 'gcp-cloud-credentials',
-              },
-              deletionProtection: false,
-              disks: [
-                {
-                  autoDelete: true,
-                  boot: true,
-                  image: params.infrastructureID + '-rhcos-image',
-                  labels: null,
-                  sizeGb: 128,
-                  type: 'pd-ssd',
-                },
-              ],
-              kind: 'GCPMachineProviderSpec',
-              machineType: spec.instanceType,
-              metadata: {
-                creationTimestamp: null,
-              },
-              networkInterfaces: [
-                {
-                  network: params.infrastructureID + '-network',
-                  subnetwork: params.infrastructureID + '-worker-subnet',
-                },
-              ],
-              projectID: params.projectName,
-              region: params.region,
-              serviceAccounts: [
-                {
-                  email: params.infrastructureID + '-w@' + params.projectName + '.iam.gserviceaccount.com',
-                  scopes: [
-                    'https://www.googleapis.com/auth/cloud-platform',
-                  ],
-                },
-              ],
+              machineType: set.instanceType,
               tags: [
-                params.infrastructureID + '-worker',
+                params.infrastructureID + '-' + role,
               ],
-              userDataSecret: {
-                name: 'worker-user-data',
-              },
               zone: params.availabilityZones[0],
             },
           },
-        } + machineSpec,
+        },
       },
     },
-  });
+  }
+  + if std.objectHas(set, 'spec') then { spec+: set.spec } else {};
 
 local isMultiAz = function(name)
   std.objectHas(params.nodeGroups[name], 'multiAz') && params.nodeGroups[name].multiAz == true;
@@ -103,7 +62,7 @@ local machineSpecs = [
 ] + std.flattenArrays([
   [
     local spec = {
-      spec: {
+      spec+: {
         providerSpec+: {
           value+: {
             zone: zone,
@@ -118,12 +77,12 @@ local machineSpecs = [
   if isMultiAz(name)
 ]);
 
-local machines = [
-  machine(m.name, m.spec)
+local machineSets = [
+  machineSet(m.name, m.spec)
   for m in machineSpecs
 ];
 
 // Define outputs below
 {
-  '01_machines': machines,
+  '01_machinesets': machineSets,
 }
