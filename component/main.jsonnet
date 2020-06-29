@@ -6,18 +6,28 @@ local inv = kap.inventory();
 // The hiera parameters for the component
 local params = inv.parameters.openshift4_nodes;
 
-local machine = function(name) com.namespaced('openshift-machine-api', kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
+local machine = function(name, spec) com.namespaced('openshift-machine-api', kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
   metadata+: {
     labels+: {
       'machine.openshift.io/cluster-api-cluster': params.clusterId,
     },
   },
+  spec: spec,
 });
 
+local isMultiAz = function(name)
+  std.objectHas(params.nodeGroups[name], 'multiAz') && params.nodeGroups[name].multiAz == true;
+
+local machineSpecs = [
+  { name: name, spec: params.nodeGroups[name] }
+  for name in std.objectFields(params.nodeGroups)
+  if !isMultiAz(name)
+
+];
 
 local machines = [
-  machine(name)
-  for name in std.objectFields(params.nodeGroups)
+  machine(m.name, m.spec)
+  for m in machineSpecs
 ];
 
 // Define outputs below
