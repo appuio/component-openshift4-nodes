@@ -17,7 +17,7 @@ local machineSet = function(name, set)
       namespace: params.namespace,
     },
     spec+: {
-      replicas: if std.objectHas(set, 'replicas') then set.replicas else 1,
+      replicas: com.getValueOrDefault(set, 'replicas', 1),
       selector+: {
         matchLabels+: {
           'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
@@ -47,7 +47,7 @@ local machineSet = function(name, set)
       },
     },
   }
-  + if std.objectHas(set, 'spec') then { spec+: set.spec } else {};
+  + if std.objectHas(set, 'spec') then { spec+: com.makeMergeable(set.spec) } else {};
 
 local isMultiAz = function(name)
   std.objectHas(params.nodeGroups[name], 'multiAz') && params.nodeGroups[name].multiAz == true;
