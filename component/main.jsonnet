@@ -55,22 +55,32 @@ local isMultiAz = function(name)
 local zoneId = function(name)
   std.reverse(std.split(name, '-'))[0];
 
+local replicasPerZone(replicas) =
+  std.ceil(replicas / std.length(params.availabilityZones));
+
 local machineSpecs = [
   { name: name, spec: params.nodeGroups[name] }
   for name in std.objectFields(params.nodeGroups)
   if !isMultiAz(name)
 ] + std.flattenArrays([
   [
-    local spec = {
-      spec+: {
-        providerSpec+: {
-          value+: {
-            zone: zone,
+    {
+      name: name + '-' + zoneId(zone),
+      spec: params.nodeGroups[name] {
+        replicas: replicasPerZone(com.getValueOrDefault(params.nodeGroups[name], 'replicas', 1)),
+        spec+: {
+          template+: {
+            spec+: {
+              providerSpec+: {
+                value+: {
+                  zone: zone,
+                },
+              },
+            },
           },
         },
       },
-    } + params.nodeGroups[name];
-    { name: name + '-' + zoneId(zone), spec: spec }
+    }
     for zone in params.availabilityZones
   ]
   for name in std.objectFields(params.nodeGroups)
