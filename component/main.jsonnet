@@ -34,6 +34,11 @@ local machineSet = function(name, set)
           },
         },
         spec+: {
+          metadata+: {
+            labels+: {
+              'machine.openshift.io/cluster-api-machine-role': role,
+            },
+          },
           providerSpec+: {
             value+: {
               machineType: set.instanceType,

@@ -5,9 +5,9 @@ The parent key for all of the following parameters is `openshift4_nodes`.
 [CAUTION]
 ====
 This component relies on deep merge of values from several parameters and hierarchy layers.
-This works pretty strait forward for scalar values and dictionaries.
+This works pretty straightforward for scalar values and dictionaries.
 Values of arrays will be appended to each other.
-There is no way to override values of set on lover precedence location.
+There is no way to override values which were set on a lower precedence location.
 ====
 
 == `availabilityZones`
@@ -52,8 +52,8 @@ See also https://github.com/appuio/component-openshift4-nodes/issues/2[Get a clu
 
 [TIP]
 ====
-This is most like to be configured on cluster level itself.
-Configuring that higher up in the hierarchy, can result in unexpected behavior.
+This is most likely to be configured on cluster level itself.
+Configuring this higher up in the hierarchy can result in unexpected behavior.
 ====
 
 == `namespace`
@@ -116,7 +116,7 @@ type:: string
 default:: worker
 
 The role of the created Nodes.
-The value will be added as the `node-role.kubernetes.io/<role>: ""` label to node.
+The value will be added as the `node-role.kubernetes.io/<role>: ""` label to nodes.
 
 [NOTE]
 ====
