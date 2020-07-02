@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- …
+- Basic ability to configure MachineSets ([#1])
 
 [Unreleased]: https://github.com/appuio/component-openshift4-nodes/compare/v0.1.0...HEAD
+[#1]: https://github.com/appuio/component-openshift4-nodes/pull/1

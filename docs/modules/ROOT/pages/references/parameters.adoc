@@ -1,0 +1,163 @@
+= Parameters
+
+The parent key for all of the following parameters is `openshift4_nodes`.
+
+[CAUTION]
+====
+This component relies on deep merge of values from several parameters and hierarchy layers.
+This works pretty straightforward for scalar values and dictionaries.
+Values of arrays will be appended to each other.
+There is no way to override values which were set on a lower precedence location.
+====
+
+== `availabilityZones`
+
+[horizontal]
+type:: list of strings
+default:: []
+
+List of availability zone names.
+The list will be used when distributing MachineSets across zones (see <<multiAZ>>).
+The first item of this list will also be used to place a MachineSet without an explicit zone defined.
+
+It's suggested to define its values higher up the config hierarchy.
+Most probably the one of the cloud region.
+
+== `defaultSpecs`
+
+[horizontal]
+type:: dictionary
+default:: Sensible defaults for a growing number of cloud providers.
+
+A dictionary holding the default values applied to each `machinesets.machine.openshift.io` object created by this component.
+
+The top level keys are the names of cloud providers as reported by the `cloud.provider` fact.
+The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
+
+== `infrastructureID`
+
+[horizontal]
+type:: string
+default:: undefined
+
+This is the 12 character infrastructure ID given to a cluster by the OpenShift 4 installer.
+Use the following command to retrieve this from the cluster:
+
+[code,bash]
+----
+oc get -o jsonpath='{.status.infrastructureName}{"\n"}' infrastructure cluster
+----
+
+See also https://github.com/appuio/component-openshift4-nodes/issues/2[Get a clusters infrastructure ID as a fact].
+
+[TIP]
+====
+This is most likely to be configured on cluster level itself.
+Configuring this higher up in the hierarchy can result in unexpected behavior.
+====
+
+== `namespace`
+
+[horizontal]
+type:: string
+default:: openshift-machine-api
+
+The namespace where namespaced objects will be created in.
+
+== `nodeGroups`
+
+[horizontal]
+type:: dictionary
+default:: empty
+
+A dictionary of node groups to create on the cluster.
+It's centered around the MachineSet CRD but also takes care of some additional aspects like zone distribution and auto scaling.
+
+The top level key is the name of each set of machines.
+Each set of machines has the values described below.
+
+=== `instanceType`
+
+=== `multiAz`
+
+[horizontal]
+type:: boolean
+default:: false
+
+A machine set will be placed in one single availability zone.
+If not specified otherwise, the first entry of `availabilityZones` will be used.
+When set to true, a MachineSet will be created for each zone listed in `availabilityZones`.
+The replicas of the generated MachineSets will be calculated.
+The `replicas` given will be divided by the cont of zones in `availabilityZones` rounded up.
+
+See also https://github.com/appuio/component-openshift4-nodes/issues/3[Effective replica count of multi zone machines can be higher than the requested one]
+
+=== `replicas`
+
+[horizontal]
+type:: number
+default:: 1
+
+The number of machines to create.
+When `multiAZ` is set to `true`, the number given here will be divided so that each of the created MachineSets will get a fraction of replicas but the total of created machines will match the one requested here.
+
+See also <<multiAZ>>.
+
+[NOTE]
+====
+This value can also be set in <<spec>>.
+If done so, the value in <<spec>> will win.
+====
+
+=== `role`
+
+[horizontal]
+type:: string
+default:: worker
+
+The role of the created Nodes.
+The value will be added as the `node-role.kubernetes.io/<role>: ""` label to nodes.
+
+[NOTE]
+====
+In order to add additional labels to the resulting Node object, use `spec.template.spec.metadata.labels`.
+====
+
+=== `spec`
+
+[horizontal]
+type:: dictionary
+default:: See <<defaultSpec>>.
+
+This gives you the full control over the resulting MachineSet.
+Values given here will be merged with precedence with the defaults configured in <<defaultSpec>>.
+The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
+
+== Example
+
+[source,yaml]
+----
+infrastructureID: c-mist-sg7hn
+
+nodeGroups:
+  infra:
+    instanceType: n1-standard-8
+    multiAz: true
+    replicas: 3
+    role: infra
+  worker:
+    instanceType: n1-standard-8
+    replicas: 3
+    spec: 
+      deletePolicy: Oldest
+      template:
+        spec:
+          metadata:
+            labels:
+              mylabel: myvalue
+
+availabilityZones:
+- europe-west6-a
+- europe-west6-b
+- europe-west6-c
+----
