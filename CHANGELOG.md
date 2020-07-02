@@ -9,5 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Basic ability to configure MachineSets ([#1])
 
+### Fixed
+
+- Node role label ([#7])
+
 [Unreleased]: https://github.com/appuio/component-openshift4-nodes/compare/v0.1.0...HEAD
 [#1]: https://github.com/appuio/component-openshift4-nodes/pull/1
+[#7]: https://github.com/appuio/component-openshift4-nodes/pull/7
