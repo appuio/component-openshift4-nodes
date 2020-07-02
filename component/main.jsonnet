@@ -36,7 +36,7 @@ local machineSet = function(name, set)
         spec+: {
           metadata+: {
             labels+: {
-              'machine.openshift.io/cluster-api-machine-role': role,
+              ['node-role.kubernetes.io/' + role]: '',
             },
           },
           providerSpec+: {
