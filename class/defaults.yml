@@ -18,25 +18,25 @@ parameters:
                   name: gcp-cloud-credentials
                 deletionProtection: false
                 disks:
-                - autoDelete: true
-                  boot: true
-                  image: ${openshift4_nodes:infrastructureID}-rhcos-image
-                  labels: null
-                  sizeGb: 128
-                  type: pd-ssd
+                  - autoDelete: true
+                    boot: true
+                    image: ${openshift4_nodes:infrastructureID}-rhcos-image
+                    labels: null
+                    sizeGb: 128
+                    type: pd-ssd
                 kind: GCPMachineProviderSpec
                 machineType: n1-standard-4
                 metadata:
                   creationTimestamp: null
                 networkInterfaces:
-                - network: ${openshift4_nodes:infrastructureID}-network
-                  subnetwork: ${openshift4_nodes:infrastructureID}-worker-subnet
+                  - network: ${openshift4_nodes:infrastructureID}-network
+                    subnetwork: ${openshift4_nodes:infrastructureID}-worker-subnet
                 projectID: ${openshift4_nodes:projectName}
-                region:  ${cloud:region}
+                region: ${cloud:region}
                 serviceAccounts:
-                - email: ${openshift4_nodes:infrastructureID}-w@${openshift4_nodes:projectName}.iam.gserviceaccount.com
-                  scopes:
-                  - https://www.googleapis.com/auth/cloud-platform
+                  - email: ${openshift4_nodes:infrastructureID}-w@${openshift4_nodes:projectName}.iam.gserviceaccount.com
+                    scopes:
+                      - https://www.googleapis.com/auth/cloud-platform
                 tags: []
                 userDataSecret:
                   name: worker-user-data
