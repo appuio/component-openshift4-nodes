@@ -50,7 +50,7 @@ local machineSet = function(name, set)
   + if std.objectHas(set, 'spec') then { spec+: com.makeMergeable(set.spec) } else {};
 
 local isMultiAz = function(name)
-  std.objectHas(params.nodeGroups[name], 'multiAz') && params.nodeGroups[name].multiAz == true;
+  com.getValueOrDefault(params.nodeGroups[name], 'multiAz', false);
 
 local zoneId = function(name)
   std.reverse(std.split(name, '-'))[0];
