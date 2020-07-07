@@ -1,6 +1,8 @@
 parameters:
   openshift4_nodes:
     namespace: openshift-machine-api
+    projectName: none
+    infrastructureID: none
     defaultSpecs:
       aws: {}
       azure: {}
