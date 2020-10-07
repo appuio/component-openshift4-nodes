@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Node role label ([#7])
 
-[Unreleased]: https://github.com/appuio/component-openshift4-nodes/compare/v0.1.0...HEAD
+### Changed
+
+- Always add `worker` role label ([#10])
+
+[Unreleased]: https://github.com/appuio/component-openshift4-nodes/compare/3cca3df2089b59a61335ae6d272fd8dd0baf637b...HEAD
+
 [#1]: https://github.com/appuio/component-openshift4-nodes/pull/1
 [#7]: https://github.com/appuio/component-openshift4-nodes/pull/7
+[#10]: https://github.com/appuio/component-openshift4-nodes/pull/10
