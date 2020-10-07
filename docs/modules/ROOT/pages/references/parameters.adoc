@@ -117,6 +117,7 @@ default:: worker
 
 The role of the created Nodes.
 The value will be added as the `node-role.kubernetes.io/<role>: ""` label to nodes.
+The `worker` role label will always be added to inherit the base configuration for nodes.
 
 [NOTE]
 ====
@@ -144,11 +145,10 @@ nodeGroups:
     instanceType: n1-standard-8
     multiAz: true
     replicas: 3
-    role: infra
   worker:
     instanceType: n1-standard-8
     replicas: 3
-    spec: 
+    spec:
       deletePolicy: Oldest
       template:
         spec:

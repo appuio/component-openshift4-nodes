@@ -6,7 +6,7 @@ local inv = kap.inventory();
 local params = inv.parameters.openshift4_nodes;
 
 local machineSet = function(name, set)
-  local role = if std.objectHas(set, 'role') then set.role else 'worker';
+  local role = if std.objectHas(set, 'role') then set.role else name;
   kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name)
   + { spec+: params.defaultSpecs[inv.parameters.cloud.provider] }
   + {
@@ -36,7 +36,8 @@ local machineSet = function(name, set)
         spec+: {
           metadata+: {
             labels+: {
-              ['node-role.kubernetes.io/' + role]: '',
+              'node-role.kubernetes.io/worker': '',
+              [if role != 'worker' then 'node-role.kubernetes.io/' + role]: '',
             },
           },
           providerSpec+: {
