@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Node role label ([#7])
+- Use worker tag for all nodes ([#11])
 
 ### Changed
 
@@ -22,3 +23,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1]: https://github.com/appuio/component-openshift4-nodes/pull/1
 [#7]: https://github.com/appuio/component-openshift4-nodes/pull/7
 [#10]: https://github.com/appuio/component-openshift4-nodes/pull/10
+[#11]: https://github.com/appuio/component-openshift4-nodes/pull/11

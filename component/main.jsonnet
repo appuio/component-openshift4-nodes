@@ -44,7 +44,7 @@ local machineSet = function(name, set)
             value+: {
               machineType: set.instanceType,
               tags: [
-                params.infrastructureID + '-' + role,
+                params.infrastructureID + '-worker',
               ],
               zone: params.availabilityZones[0],
             },
