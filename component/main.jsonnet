@@ -93,12 +93,8 @@ local machineSpecs = [
   if isMultiAz(name)
 ]);
 
-local machineSets = [
-  machineSet(m.name, m.spec)
-  for m in machineSpecs
-];
 
-// Define outputs below
 {
-  '01_machinesets': machineSets,
+  ['machineset-' + m.name]: machineSet(m.name, m.spec)
+  for m in machineSpecs
 }

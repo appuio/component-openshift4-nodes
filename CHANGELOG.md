@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Always add `worker` role label ([#10])
+- Write MachineSets to separate files ([#12])
 
 [Unreleased]: https://github.com/appuio/component-openshift4-nodes/compare/3cca3df2089b59a61335ae6d272fd8dd0baf637b...HEAD
 
@@ -24,3 +25,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#7]: https://github.com/appuio/component-openshift4-nodes/pull/7
 [#10]: https://github.com/appuio/component-openshift4-nodes/pull/10
 [#11]: https://github.com/appuio/component-openshift4-nodes/pull/11
+[#12]: https://github.com/appuio/component-openshift4-nodes/pull/12
