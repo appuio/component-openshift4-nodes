@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Node role label ([#7])
 - Use worker tag for all nodes ([#11])
+- Add `.gitkeep` for empty MachineSet ([#13])
 
 ### Changed
 
@@ -26,3 +27,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#10]: https://github.com/appuio/component-openshift4-nodes/pull/10
 [#11]: https://github.com/appuio/component-openshift4-nodes/pull/11
 [#12]: https://github.com/appuio/component-openshift4-nodes/pull/12
+[#13]: https://github.com/appuio/component-openshift4-nodes/pull/13
