@@ -134,6 +134,23 @@ This gives you the full control over the resulting MachineSet.
 Values given here will be merged with precedence with the defaults configured in <<defaultSpec>>.
 The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
 
+== `kubeletConfigs`
+
+[horizontal]
+type:: dict
+default:: See `class/defaults.yml`
+
+This parameter accepts a key-value dict where the values are of kind `machineconfiguration.openshift.io/v1/KubeletConfig`.
+The keys are resulting `metadata.name` and the values reflect the `.spec` field of `KubeletConfig`.
+
+[WARNING]
+Please refer to the upstream version of the relevant kubelet for the valid values of these fields.
+Invalid values of the kubelet configuration fields may render cluster nodes unusable.
+
+See https://github.com/kubernetes/kubelet/blob/master/config/v1beta1/types.go[supported configuration fields upstream] (choose matching release branch for versioned options)
+
+See also: https://docs.openshift.com/container-platform/4.9/nodes/nodes/nodes-nodes-managing-max-pods.html[Managing the maximum number of pods per node]
+
 == Example
 
 [source,yaml]
@@ -160,4 +177,13 @@ availabilityZones:
 - europe-west6-a
 - europe-west6-b
 - europe-west6-c
+
+kubeletConfigs:
+  workers:
+    machineConfigPoolSelector:
+      matchExpressions:
+        key: pools.operator.machineconfiguration.openshift.io/worker
+        operator: Exists
+    kubeletConfig:
+      maxPods: 100
 ----

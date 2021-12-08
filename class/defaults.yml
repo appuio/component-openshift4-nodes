@@ -44,3 +44,5 @@ parameters:
                   name: worker-user-data
 
     nodeGroups: {}
+
+    kubeletConfigs: {}
