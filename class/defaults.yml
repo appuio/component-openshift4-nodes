@@ -1,6 +1,6 @@
 parameters:
   openshift4_nodes:
-    namespace: openshift-machine-api
+    machineApiNamespace: openshift-machine-api
     projectName: none
     infrastructureID: none
     defaultSpecs:

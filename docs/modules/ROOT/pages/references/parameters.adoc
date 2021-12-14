@@ -56,13 +56,16 @@ This is most likely to be configured on cluster level itself.
 Configuring this higher up in the hierarchy can result in unexpected behavior.
 ====
 
-== `namespace`
+== `machine_api_namespace`
+
 
 [horizontal]
 type:: string
-default:: openshift-machine-api
+default:: `openshift-machine-api`
 
-The namespace where namespaced objects will be created in.
+The namespace where machine-api related objects should be created.
+
+TIP: Namespaced resources without an explicit `.metadata.namespace` field will be deployed in this namespace as well.
 
 == `nodeGroups`
 

@@ -14,7 +14,7 @@ local machineSet = function(name, set)
       labels+: {
         'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
       },
-      namespace: params.namespace,
+      namespace: params.machineApiNamespace,
     },
     spec+: {
       replicas: com.getValueOrDefault(set, 'replicas', 1),
