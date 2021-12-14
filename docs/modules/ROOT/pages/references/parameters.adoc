@@ -156,6 +156,23 @@ See https://github.com/kubernetes/kubelet/blob/master/config/v1beta1/types.go[su
 
 See also: https://docs.openshift.com/container-platform/4.9/nodes/nodes/nodes-nodes-managing-max-pods.html[Managing the maximum number of pods per node]
 
+== `debugNamespace`
+
+[horizontal]
+type:: string
+default:: `syn-debug-nodes`
+
+The namespace to create for `oc debug node/<nodename>`.
+This namespace is annotated to ensure that debug pods can be scheduled on any nodes.
+
+Use `oc debug node/<nodename> --to syn-debug-nodes` to create the debug pods in the namespace.
+
+[NOTE]
+====
+This component will take ownership of the namespace specified here.
+Please make sure you don't specify a namespace which is already managed by other means.
+====
+
 == Example
 
 [source,yaml]
