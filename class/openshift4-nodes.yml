@@ -6,7 +6,7 @@ parameters:
         input_type: jsonnet
         output_path: apps/
       - input_paths:
-          - openshift4-nodes/component/main.jsonnet
+          - openshift4-nodes/component/machine-sets.jsonnet
           - openshift4-nodes/component/kubelet.jsonnet
         input_type: jsonnet
         output_path: openshift4-nodes/
