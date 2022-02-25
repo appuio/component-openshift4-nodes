@@ -8,7 +8,7 @@ local params = inv.parameters.openshift4_nodes;
 local machineSet = function(name, set)
   local role = if std.objectHas(set, 'role') then set.role else name;
   kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name)
-  + { spec+: params.defaultSpecs[inv.parameters.cloud.provider] }
+  + { spec+: params.defaultSpecs[inv.parameters.facts.cloud] }
   + {
     metadata+: {
       labels+: {
