@@ -34,7 +34,7 @@ parameters:
                   - network: ${openshift4_nodes:infrastructureID}-network
                     subnetwork: ${openshift4_nodes:infrastructureID}-worker-subnet
                 projectID: ${openshift4_nodes:projectName}
-                region: ${cloud:region}
+                region: ${facts:region}
                 serviceAccounts:
                   - email: ${openshift4_nodes:infrastructureID}-w@${openshift4_nodes:projectName}.iam.gserviceaccount.com
                     scopes:
