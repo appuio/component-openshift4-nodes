@@ -5,7 +5,7 @@ on:
       - master
 
 env:
-  COMPONENT_NAME: openshift4-nodes
+  COMPONENT_NAME: OpenShift 4 Nodes
 
 jobs:
   linting:
