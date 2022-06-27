@@ -1,1 +1,7 @@
 # Parameters
+parameters:
+  openshift4_nodes:
+    kubeletConfigs:
+      workers:
+        kubeletConfig:
+          maxPods: 999

@@ -11,9 +11,7 @@ local kubeletConfigs = [
     metadata+: {
       labels+: common.DefaultLabels,
     },
-    spec: params.kubeletConfigs[nodeGroup] {
-      assert !std.objectHas(self.kubeletConfig, 'maxPods') || self.kubeletConfig.maxPods <= 110 : 'kubeletConfig.maxPods cannot be greater than 110',
-    },
+    spec: params.kubeletConfigs[nodeGroup],
   }
   for nodeGroup in std.objectFields(params.kubeletConfigs)
   if params.kubeletConfigs[nodeGroup] != null
