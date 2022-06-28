@@ -151,7 +151,7 @@ Please refer to the upstream version of the relevant kubelet for the valid value
 Invalid values of the kubelet configuration fields may render cluster nodes unusable.
 
 [IMPORTANT]
-The component willprint a warning if the configuration field `maxPods` is set to a value larger than 110.
+The component will print a warning if the configuration field `maxPods` is set to a value larger than 110.
 See https://github.com/kubernetes/kubelet/blob/master/config/v1beta1/types.go[supported configuration fields upstream] (choose matching release branch for versioned options)
 
 See also: https://docs.openshift.com/container-platform/4.9/nodes/nodes/nodes-nodes-managing-max-pods.html[Managing the maximum number of pods per node]
