@@ -2,3 +2,12 @@
   componentName: OpenShift 4 Nodes
   githubUrl: https://github.com/appuio/component-openshift4-nodes
   feature_goldenTests: true
+  testMatrix:
+    key: instance
+    entries:
+      - defaults
+      - maxpods
+
+.github/workflows/test.yaml:
+  test_makeTarget: test -e instance=${{ matrix.instance }}
+  goldenTest_makeTarget: golden-diff -e instance=${{ matrix.instance }}
