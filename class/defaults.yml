@@ -56,5 +56,5 @@ parameters:
 
     debugNamespace: syn-debug-nodes
 
-    syn_monitoring:
+    monitoring:
       enabled: false

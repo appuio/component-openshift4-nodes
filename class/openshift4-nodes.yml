@@ -9,5 +9,6 @@ parameters:
           - openshift4-nodes/component/machine-sets.jsonnet
           - openshift4-nodes/component/kubelet.jsonnet
           - openshift4-nodes/component/oc-debug-node.jsonnet
+          - openshift4-nodes/component/metrics.jsonnet
         input_type: jsonnet
         output_path: openshift4-nodes/
