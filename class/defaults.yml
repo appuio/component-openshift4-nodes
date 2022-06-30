@@ -55,3 +55,6 @@ parameters:
           maxPods: 110
 
     debugNamespace: syn-debug-nodes
+
+    syn_monitoring:
+      enabled: false

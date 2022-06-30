@@ -1,0 +1,4 @@
+parameters:
+  openshift4_nodes:
+    syn_monitoring:
+      enabled: true

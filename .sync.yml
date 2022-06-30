@@ -7,6 +7,7 @@
     entries:
       - defaults
       - maxpods
+      - syn-monitoring
 
 .github/workflows/test.yaml:
   test_makeTarget: test -e instance=${{ matrix.instance }}
