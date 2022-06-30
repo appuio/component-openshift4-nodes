@@ -3,35 +3,6 @@ kind: ServiceMonitor
 metadata:
   annotations: {}
   labels:
-    name: openshift-machine-api-cluster-autoscaler-operator
-  name: openshift-machine-api-cluster-autoscaler-operator
-  namespace: syn-monitoring-openshift4-nodes
-spec:
-  endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      interval: 30s
-      port: metrics
-      relabelings:
-        - action: drop
-          regex: (go_.*|process_.*|promhttp_.*)
-          sourceLabels:
-            - __name__
-      scheme: https
-      tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
-        serverName: cluster-autoscaler-operator.openshift-machine-api.svc
-  namespaceSelector:
-    matchNames:
-      - openshift-machine-api
-  selector:
-    matchLabels:
-      k8s-app: cluster-autoscaler-operator
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  annotations: {}
-  labels:
     name: openshift-machine-api-machine-api-controllers
   name: openshift-machine-api-machine-api-controllers
   namespace: syn-monitoring-openshift4-nodes

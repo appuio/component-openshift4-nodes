@@ -158,16 +158,19 @@ if syn_metrics then
     ),
     // Note: we don't need network policies here, since the target namespaces
     // don't have any network policies present by default.
-    serviceMonitors: [
-      // ServiceMonitors in our namespace
-      prometheus.ServiceMonitor('%s-%s' % [ ns, sm.name ]) {
-        metadata+: {
-          namespace: nsName,
-        },
-      } + sm.config
-      for ns in namespaces
-      for sm in serviceMonitors[ns]
-    ],
+    serviceMonitors: std.filter(
+      function(it) it != null,
+      [
+        if params.monitoring.enableServiceMonitors[sm.name] then
+          prometheus.ServiceMonitor('%s-%s' % [ ns, sm.name ]) {
+            metadata+: {
+              namespace: nsName,
+            },
+          } + sm.config
+        for ns in namespaces
+        for sm in serviceMonitors[ns]
+      ]
+    ),
   }
 else
   std.trace(
