@@ -58,3 +58,4 @@ parameters:
 
     monitoring:
       enabled: false
+      instance: ''

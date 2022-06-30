@@ -142,11 +142,11 @@ local serviceMonitors = {
   ],
 };
 
-local promInstance = com.getValueOrDefault(
-  params.syn_monitoring,
-  'instance',
-  inv.parameters.prometheus.defaultInstance
-);
+local promInstance =
+  if params.monitoring.instance != '' then
+    params.monitoring.instance
+  else
+    inv.parameters.prometheus.defaultInstance;
 
 local nsName = 'syn-monitoring-openshift4-nodes';
 
