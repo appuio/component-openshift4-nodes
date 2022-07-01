@@ -234,3 +234,12 @@ default:: `null`
 This parameter can be used to indicate which custom Prometheus instance should pick up the configurations managed by the component.
 
 If the parameter is set to `null`, the default instance configured for component `prometheus` will be used.
+
+=== `enableServiceMonitors`
+
+[horizontal]
+type:: dictionary
+default:: https://github.com/appuio/component-openshift4-nodes/blob/master/class/defaults.yml[See `class/defaults.yml`]
+
+A dictionary with the names of service monitors as keys and booleans as the value.
+Can be used to selectively enable or disable service monitors.
