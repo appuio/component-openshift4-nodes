@@ -97,7 +97,6 @@ spec:
           regex: (go_.*|process_.*|promhttp_.*)
           sourceLabels:
             - __name__
-      path: /metrics
       port: metrics
       relabelings:
         - action: replace

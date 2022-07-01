@@ -16,120 +16,88 @@ local syn_metrics =
   std.member(inv.applications, 'prometheus');
 
 local endpointDefaults = {
-  bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
-  interval: '30s',
-  scheme: 'https',
   metricRelabelings: [
     prometheus.DropRuntimeMetrics,
   ],
-  tlsConfig: {
-    caFile: '/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt',
-  },
 };
+
 local smDefaults(ns, name) = {
-  spec: {
-    namespaceSelector: {
-      matchNames: [ ns ],
-    },
-    selector: {
-      matchLabels: {
-        'k8s-app': name,
-      },
+  targetNamespace: ns,
+  selector: {
+    matchLabels: {
+      'k8s-app': name,
     },
   },
 };
 
 local serviceMonitors = {
   'openshift-machine-api': [
-    {
-      name: 'cluster-autoscaler-operator',
-      config: smDefaults('openshift-machine-api', 'cluster-autoscaler-operator') {
-        spec+: {
-          endpoints: [
-            endpointDefaults {
-              port: 'metrics',
-              tlsConfig+: {
-                serverName: 'cluster-autoscaler-operator.openshift-machine-api.svc',
-              },
-            },
-          ],
-        },
+    prometheus.ServiceMonitor('cluster-autoscaler-operator') +
+    smDefaults('openshift-machine-api', 'cluster-autoscaler-operator') {
+      endpoints: {
+        operator: prometheus.ServiceMonitorHttpsEndpoint(
+          'cluster-autoscaler-operator.openshift-machine-api.svc'
+        ) + endpointDefaults,
       },
     },
-    {
-      name: 'machine-api-controllers',
-      config: smDefaults('openshift-machine-api', 'controller') {
-        spec+: {
-          endpoints: [
-            endpointDefaults {
-              port: 'machine-mtrc',
-              scheme: 'https',
-              tlsConfig+: {
-                serverName: 'machine-api-controllers.openshift-machine-api.svc',
-              },
-            },
-            endpointDefaults {
-              port: 'machineset-mtrc',
-              tlsConfig+: {
-                serverName: 'machine-api-controllers.openshift-machine-api.svc',
-              },
-            },
-            endpointDefaults {
-              port: 'mhc-mtrc',
-              scheme: 'https',
-              tlsConfig+: {
-                serverName: 'machine-api-controllers.openshift-machine-api.svc',
-              },
-            },
-          ],
-        },
+    prometheus.ServiceMonitor('machine-api-controllers') +
+    smDefaults('openshift-machine-api', 'controller') {
+      endpoints: {
+        machine_mtrc:
+          prometheus.ServiceMonitorHttpsEndpoint(
+            'machine-api-controllers.openshift-machine-api.svc'
+          ) + endpointDefaults {
+            port: 'machine-mtrc',
+          },
+        machineset_mtrc:
+          prometheus.ServiceMonitorHttpsEndpoint(
+            'machine-api-controllers.openshift-machine-api.svc'
+          ) + endpointDefaults {
+            port: 'machineset-mtrc',
+          },
+        mhc_mtrc:
+          prometheus.ServiceMonitorHttpsEndpoint(
+            'machine-api-controllers.openshift-machine-api.svc'
+          ) + endpointDefaults {
+            port: 'mhc-mtrc',
+          },
       },
     },
-    {
-      name: 'machine-api-operator',
-      config: smDefaults('openshift-machine-api', 'machine-api-operator') {
-        spec+: {
-          endpoints: [
-            endpointDefaults {
-              port: 'https',
-              tlsConfig+: {
-                serverName: 'machine-api-operator.openshift-machine-api.svc',
-              },
-            },
-          ],
-        },
+    prometheus.ServiceMonitor('machine-api-operator') +
+    smDefaults('openshift-machine-api', 'machine-api-operator') {
+      endpoints: {
+        operator:
+          prometheus.ServiceMonitorHttpsEndpoint(
+            'machine-api-operator.openshift-machine-api.svc',
+          ) + endpointDefaults {
+            port: 'https',
+          },
       },
     },
   ],
 
   'openshift-machine-config-operator': [
-    {
-      name: 'machine-config-daemon',
-      config: smDefaults('openshift-machine-config-operator', 'machine-config-daemon') {
-        spec+: {
-          endpoints: [
-            endpointDefaults {
-              path: '/metrics',
-              port: 'metrics',
-              relabelings+: [
-                {
-                  action: 'replace',
-                  regex: ';(.*)',
-                  replacement: '$1',
-                  separator: ';',
-                  sourceLabels: [
-                    'node',
-                    '__meta_kubernetes_pod_node_name',
-                  ],
-                  targetLabel: 'node',
-                },
-              ],
-              tlsConfig+: {
-                serverName: 'machine-config-daemon.openshift-machine-config-operator.svc',
+    prometheus.ServiceMonitor('machine-config-daemon') +
+    smDefaults('openshift-machine-config-operator', 'machine-config-daemon') {
+      endpoints: {
+        mcd:
+          prometheus.ServiceMonitorHttpsEndpoint(
+            'machine-config-daemon.openshift-machine-config-operator.svc'
+          ) + endpointDefaults {
+            relabelings+: [
+              {
+                action: 'replace',
+                regex: ';(.*)',
+                replacement: '$1',
+                separator: ';',
+                sourceLabels: [
+                  'node',
+                  '__meta_kubernetes_pod_node_name',
+                ],
+                targetLabel: 'node',
               },
-            },
-          ],
-        },
+            ],
+          },
       },
     },
   ],
@@ -154,12 +122,13 @@ if syn_metrics then
     serviceMonitors: std.filter(
       function(it) it != null,
       [
-        if params.monitoring.enableServiceMonitors[sm.name] then
-          prometheus.ServiceMonitor('%s-%s' % [ ns, sm.name ]) {
+        if params.monitoring.enableServiceMonitors[sm.metadata.name] then
+          sm {
             metadata+: {
+              name: '%s-%s' % [ sm.targetNamespace, sm.metadata.name ],
               namespace: nsName,
             },
-          } + sm.config
+          }
         for ns in namespaces
         for sm in serviceMonitors[ns]
       ]
