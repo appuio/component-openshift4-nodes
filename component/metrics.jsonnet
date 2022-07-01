@@ -15,19 +15,12 @@ local syn_metrics =
   params.monitoring.enabled &&
   std.member(inv.applications, 'prometheus');
 
-// config to drop Go runtime and Prometheus http handler metrics
-local dropRuntimeMetrics = {
-  action: 'drop',
-  regex: '(go_.*|process_.*|promhttp_.*)',
-  sourceLabels: [ '__name__' ],
-};
-
 local endpointDefaults = {
   bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
   interval: '30s',
   scheme: 'https',
-  relabelings: [
-    dropRuntimeMetrics,
+  metricRelabelings: [
+    prometheus.DropRuntimeMetrics,
   ],
   tlsConfig: {
     caFile: '/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt',
