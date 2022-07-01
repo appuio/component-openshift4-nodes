@@ -57,7 +57,7 @@ parameters:
     debugNamespace: syn-debug-nodes
 
     monitoring:
-      enabled: false
+      enabled: true
       instance: ''
       enableServiceMonitors:
         cluster-autoscaler-operator: true

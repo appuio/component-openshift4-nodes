@@ -219,7 +219,7 @@ Currently the component has support for deploying custom `ServiceMonitors` on cl
 
 [horizontal]
 type:: boolean
-default:: `false`
+default:: `true`
 
 Whether to deploy monitoring configurations.
 If this parameter is set to `true`, the component will check whether component `prometheus` is present on the cluster.
