@@ -58,7 +58,7 @@ parameters:
 
     monitoring:
       enabled: true
-      instance: ''
+      instance: null
       enableServiceMonitors:
         cluster-autoscaler-operator: true
         machine-api-controllers: true
