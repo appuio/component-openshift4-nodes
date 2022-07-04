@@ -34,6 +34,7 @@ jobs:
         instance:
           - defaults
           - maxpods
+          - syn-monitoring
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
@@ -50,6 +51,7 @@ jobs:
         instance:
           - defaults
           - maxpods
+          - syn-monitoring
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
