@@ -32,7 +32,7 @@ spec:
           canIPForward: false
           credentialsSecret:
             name: gcp-cloud-credentials
-          deletionProtection: false
+          deletionProtection: true
           disks:
             - autoDelete: true
               boot: true
