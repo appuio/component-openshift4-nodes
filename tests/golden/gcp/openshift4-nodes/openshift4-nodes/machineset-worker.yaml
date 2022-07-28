@@ -1,0 +1,60 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  annotations: {}
+  labels:
+    machine.openshift.io/cluster-api-cluster: infra-id
+    name: worker
+  name: worker
+  namespace: openshift-machine-api
+spec:
+  deletePolicy: Oldest
+  replicas: 3
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: infra-id
+      machine.openshift.io/cluster-api-machineset: worker
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: infra-id
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: worker
+    spec:
+      metadata:
+        labels:
+          foo: bar
+          node-role.kubernetes.io/worker: ''
+      providerSpec:
+        value:
+          apiVersion: gcpprovider.openshift.io/v1beta1
+          canIPForward: false
+          credentialsSecret:
+            name: gcp-cloud-credentials
+          deletionProtection: false
+          disks:
+            - autoDelete: true
+              boot: true
+              image: infra-id-rhcos-image
+              labels: null
+              sizeGb: 128
+              type: pd-ssd
+          kind: GCPMachineProviderSpec
+          machineType: n1-standard-8
+          metadata:
+            creationTimestamp: null
+          networkInterfaces:
+            - network: infra-id-network
+              subnetwork: infra-id-worker-subnet
+          projectID: cluster-test
+          region: rma1
+          serviceAccounts:
+            - email: infra-id-w@cluster-test.iam.gserviceaccount.com
+              scopes:
+                - https://www.googleapis.com/auth/cloud-platform
+          tags:
+            - infra-id-worker
+          userDataSecret:
+            name: worker-user-data
+          zone: europe-west6-a

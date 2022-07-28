@@ -1,0 +1,28 @@
+# Parameters
+parameters:
+  facts:
+    cloud: gcp
+  openshift4_nodes:
+    projectName: cluster-test
+    infrastructureID: infra-id
+
+    availabilityZones:
+      - europe-west6-a
+      - europe-west6-b
+      - europe-west6-c
+
+    nodeGroups:
+      infra:
+        instanceType: n1-standard-8
+        multiAz: true
+        replicas: 3
+      worker:
+        instanceType: n1-standard-8
+        replicas: 3
+        spec:
+          deletePolicy: Oldest
+          template:
+            spec:
+              metadata:
+                labels:
+                  foo: bar
