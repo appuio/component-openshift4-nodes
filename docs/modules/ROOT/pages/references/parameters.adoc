@@ -23,6 +23,11 @@ The first item of this list will also be used to place a MachineSet without an e
 It's suggested to define its values higher up the config hierarchy.
 Most probably the one of the cloud region.
 
+[NOTE]
+====
+This is currently only supported on GCP.
+====
+
 == `defaultSpecs`
 
 [horizontal]
@@ -81,6 +86,15 @@ Each set of machines has the values described below.
 
 === `instanceType`
 
+[horizontal]
+type:: string
+default:: null
+
+[NOTE]
+====
+This is currently only supported on GCP.
+====
+
 === `multiAz`
 
 [horizontal]
@@ -94,6 +108,11 @@ The replicas of the generated MachineSets will be calculated.
 The `replicas` given will be divided by the cont of zones in `availabilityZones` rounded up.
 
 See also https://github.com/appuio/component-openshift4-nodes/issues/3[Effective replica count of multi zone machines can be higher than the requested one]
+
+[NOTE]
+====
+This is currently only supported on GCP.
+====
 
 === `replicas`
 

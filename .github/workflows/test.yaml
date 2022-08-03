@@ -33,6 +33,7 @@ jobs:
       matrix:
         instance:
           - defaults
+          - gcp
           - maxpods
           - syn-monitoring
     defaults:
@@ -50,6 +51,7 @@ jobs:
       matrix:
         instance:
           - defaults
+          - gcp
           - maxpods
           - syn-monitoring
     defaults:

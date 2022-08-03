@@ -5,6 +5,8 @@ local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
 
+local isGCP = inv.parameters.facts.cloud == 'gcp';
+
 local machineSet = function(name, set)
   local role = if std.objectHas(set, 'role') then set.role else name;
   kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name)
@@ -40,7 +42,7 @@ local machineSet = function(name, set)
               [if role != 'worker' then 'node-role.kubernetes.io/' + role]: '',
             },
           },
-          providerSpec+: {
+          [if isGCP then 'providerSpec']+: {
             value+: {
               machineType: set.instanceType,
               tags: [
@@ -67,7 +69,7 @@ local replicasPerZone(replicas) =
 local machineSpecs = [
   { name: name, spec: params.nodeGroups[name] }
   for name in std.objectFields(params.nodeGroups)
-  if !isMultiAz(name)
+  if !isGCP || !isMultiAz(name)
 ] + std.flattenArrays([
   [
     {
@@ -90,7 +92,7 @@ local machineSpecs = [
     for zone in params.availabilityZones
   ]
   for name in std.objectFields(params.nodeGroups)
-  if isMultiAz(name)
+  if isGCP && isMultiAz(name)
 ]);
 
 

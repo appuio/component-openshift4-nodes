@@ -6,6 +6,7 @@
     key: instance
     entries:
       - defaults
+      - gcp
       - maxpods
       - syn-monitoring
 
