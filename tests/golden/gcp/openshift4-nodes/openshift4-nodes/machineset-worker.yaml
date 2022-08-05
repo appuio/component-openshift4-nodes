@@ -1,7 +1,8 @@
 apiVersion: machine.openshift.io/v1beta1
 kind: MachineSet
 metadata:
-  annotations: {}
+  annotations:
+    appuio.ch/egress-cidrs: 10.0.0.0/24
   labels:
     machine.openshift.io/cluster-api-cluster: infra-id
     name: worker
