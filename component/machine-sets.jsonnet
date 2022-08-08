@@ -13,6 +13,7 @@ local machineSet = function(name, set)
   + { spec+: params.defaultSpecs[inv.parameters.facts.cloud] }
   + {
     metadata+: {
+      annotations+: com.getValueOrDefault(set, 'annotations', {}),
       labels+: {
         'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
       },

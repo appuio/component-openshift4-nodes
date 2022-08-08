@@ -84,6 +84,14 @@ It's centered around the MachineSet CRD but also takes care of some additional a
 The top level key is the name of each set of machines.
 Each set of machines has the values described below.
 
+=== `annotations`
+
+[horizontal]
+type:: dictionary
+default:: {}
+
+The annotations to add to the MachineSet.
+
 === `instanceType`
 
 [horizontal]
