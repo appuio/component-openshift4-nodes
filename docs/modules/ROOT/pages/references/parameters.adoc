@@ -28,6 +28,15 @@ Most probably the one of the cloud region.
 This is currently only supported on GCP.
 ====
 
+== `containerRuntimeConfigs`
+
+[horizontal]
+type:: dict
+default:: `{}`
+
+This parameter accepts a key-value dict where the values are of kind `machineconfiguration.openshift.io/v1/ContainerRuntimeConfig`.
+The keys are resulting `metadata.name` and the values reflect the `.spec` field of `ContainerRuntimeConfig`.
+
 == `defaultSpecs`
 
 [horizontal]
@@ -227,6 +236,14 @@ availabilityZones:
 - europe-west6-b
 - europe-west6-c
 
+containerRuntimeConfigs:
+  workers:
+    machineConfigPoolSelector:
+      matchExpressions:
+        - key: pools.operator.machineconfiguration.openshift.io/worker
+          operator: Exists
+    containerRuntimeConfig:
+      pidsLimit: 2048
 kubeletConfigs:
   workers:
     machineConfigPoolSelector:
@@ -235,6 +252,7 @@ kubeletConfigs:
           operator: Exists
     kubeletConfig:
       maxPods: 100
+      podPidsLimit: 2048
 ----
 
 == `monitoring`
