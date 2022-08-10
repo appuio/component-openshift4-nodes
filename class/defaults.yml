@@ -45,6 +45,8 @@ parameters:
 
     nodeGroups: {}
 
+    containerRuntimeConfigs: {}
+
     kubeletConfigs:
       workers:
         machineConfigPoolSelector:

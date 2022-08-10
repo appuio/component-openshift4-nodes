@@ -1,0 +1,15 @@
+# Parameters
+parameters:
+  openshift4_nodes:
+    kubeletConfigs:
+      workers:
+        kubeletConfig:
+          podPidsLimit: 2048
+    containerRuntimeConfigs:
+      workers:
+        machineConfigPoolSelector:
+          matchExpressions:
+            - key: pools.operator.machineconfiguration.openshift.io/worker
+              operator: Exists
+        containerRuntimeConfig:
+          pidsLimit: 2048
