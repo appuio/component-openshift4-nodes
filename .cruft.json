@@ -1,0 +1,21 @@
+{
+  "template": "https://github.com/projectsyn/commodore-component-template.git",
+  "commit": "e6c4fd69190db1ad12e941d578b9423d0e2f993c",
+  "checkout": "main",
+  "context": {
+    "cookiecutter": {
+      "name": "OpenShift 4 Nodes",
+      "slug": "openshift4-nodes",
+      "parameter_key": "openshift4_nodes",
+      "test_cases": "defaults gcp maxpods pidslimit syn-monitoring",
+      "add_golden": "y",
+      "add_matrix": "y",
+      "add_go_unit": "n",
+      "github_owner": "appuio",
+      "github_name": "component-openshift4-nodes",
+      "github_url": "https://github.com/appuio/component-openshift4-nodes",
+      "_template": "https://github.com/projectsyn/commodore-component-template.git"
+    }
+  },
+  "directory": null
+}
