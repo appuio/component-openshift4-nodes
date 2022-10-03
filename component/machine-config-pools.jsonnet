@@ -20,6 +20,7 @@ local PatchMachineConfigPool(name) = {
   local fallback(key, obj) = {
     [if !std.objectHas(super.spec, key) then key]: obj,
   },
+  kubelet:: {},
   spec+:
     fallback(
       'machineConfigSelector', {

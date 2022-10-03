@@ -17,4 +17,8 @@ parameters:
           nodeSelector:
             matchLabels:
               node-role.kubernetes.io/ceph: ""
+      app:
+        kubelet:
+          kubeletConfig:
+            maxPods: 200
       flex: {}

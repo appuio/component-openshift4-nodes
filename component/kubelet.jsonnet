@@ -22,15 +22,37 @@ local checkMaxPods(config) =
   else
     config;
 
+
+local kubeletConfig(name) = kube._Object('machineconfiguration.openshift.io/v1', 'KubeletConfig', name) {
+  metadata+: {
+    labels+: common.DefaultLabels,
+  },
+};
+
+local mergedConfigs = std.prune(
+  std.mapWithKey(
+    function(key, obj) std.get(obj, 'kubelet', null),
+    params.machineConfigPools
+  )
+) + com.makeMergeable(params.kubeletConfigs);
+
 local kubeletConfigs = [
-  kube._Object('machineconfiguration.openshift.io/v1', 'KubeletConfig', nodeGroup) {
-    metadata+: {
-      labels+: common.DefaultLabels,
-    },
-    spec: checkMaxPods(params.kubeletConfigs[nodeGroup]),
+  local fallback(parent, key, obj) = {
+    [if !std.objectHas(parent, key) then key]: obj,
+  };
+  local spec = checkMaxPods(mergedConfigs[nodeGroup]);
+  kubeletConfig(nodeGroup) {
+    spec: spec + fallback(spec, 'machineConfigPoolSelector', {
+      matchExpressions: [
+        {
+          key: 'pools.operator.machineconfiguration.openshift.io/%s' % nodeGroup,
+          operator: 'Exists',
+        },
+      ],
+    }),
   }
-  for nodeGroup in std.objectFields(params.kubeletConfigs)
-  if params.kubeletConfigs[nodeGroup] != null
+  for nodeGroup in std.objectFields(mergedConfigs)
+  if mergedConfigs[nodeGroup] != null
 ];
 
 {

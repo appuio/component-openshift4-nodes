@@ -63,6 +63,7 @@ parameters:
         kubeletConfig:
           maxPods: 110
 
+
     debugNamespace: syn-debug-nodes
 
     monitoring:
