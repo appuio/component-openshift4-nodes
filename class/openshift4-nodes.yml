@@ -7,6 +7,7 @@ parameters:
         output_path: apps/
       - input_paths:
           - openshift4-nodes/component/machine-sets.jsonnet
+          - openshift4-nodes/component/machine-config-pools.jsonnet
           - openshift4-nodes/component/kubelet.jsonnet
           - openshift4-nodes/component/container-runtime.jsonnet
           - openshift4-nodes/component/oc-debug-node.jsonnet

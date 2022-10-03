@@ -45,8 +45,15 @@ parameters:
 
     nodeGroups: {}
 
-    containerRuntimeConfigs: {}
+    machineConfigPools:
+      master: {}
+      worker: {}
 
+      infra: {}
+      app: {}
+      storage: {}
+
+    containerRuntimeConfigs: {}
     kubeletConfigs:
       workers:
         machineConfigPoolSelector:
