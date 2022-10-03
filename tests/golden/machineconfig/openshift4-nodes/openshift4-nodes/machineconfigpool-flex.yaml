@@ -6,9 +6,9 @@ metadata:
     app.kubernetes.io/component: openshift4-nodes
     app.kubernetes.io/managed-by: commodore
     app.kubernetes.io/name: openshift4-nodes
-    name: x-storage
-    pools.operator.machineconfiguration.openshift.io/storage: ''
-  name: x-storage
+    name: x-flex
+    pools.operator.machineconfiguration.openshift.io/flex: ''
+  name: x-flex
 spec:
   machineConfigSelector:
     matchExpressions:
@@ -16,7 +16,7 @@ spec:
         operator: In
         values:
           - worker
-          - ceph
+          - flex
   nodeSelector:
     matchLabels:
-      node-role.kubernetes.io/ceph: ''
+      node-role.kubernetes.io/flex: ''

@@ -1,3 +1,20 @@
-# Overwrite parameters here
-
-# parameters: {...}
+parameters:
+  openshift4_nodes:
+    machineConfigPools:
+      master:
+        nodeSelector:
+          matchLabels:
+            node-role.kubernetes.io/wrongNode: ""
+      storage:
+        spec:
+          machineConfigSelector:
+            matchExpressions:
+            - key: machineconfiguration.openshift.io/role
+              operator: In
+              values:
+              - worker
+              - ceph
+          nodeSelector:
+            matchLabels:
+              node-role.kubernetes.io/ceph: ""
+      flex: {}
