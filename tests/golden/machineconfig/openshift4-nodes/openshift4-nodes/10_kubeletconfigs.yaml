@@ -10,7 +10,7 @@ metadata:
   name: app
 spec:
   kubeletConfig:
-    maxPods: 200
+    maxPods: 1337
   machineConfigPoolSelector:
     matchExpressions:
       - key: pools.operator.machineconfiguration.openshift.io/app

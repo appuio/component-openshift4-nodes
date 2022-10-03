@@ -6,15 +6,34 @@ local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
 
+local mergedConfigs = std.prune(
+  std.mapWithKey(
+    function(key, obj) std.get(obj, 'containerRuntime', null),
+    params.machineConfigPools
+  )
+) + com.makeMergeable(params.containerRuntimeConfigs);
+
+
 local containerRuntimeConfigs = [
+
   kube._Object('machineconfiguration.openshift.io/v1', 'ContainerRuntimeConfig', nodeGroup) {
+    local fallback(parent, key, obj) = {
+      [if !std.objectHas(parent, key) then key]: obj,
+    },
     metadata+: {
       labels+: common.DefaultLabels,
     },
-    spec: params.containerRuntimeConfigs[nodeGroup],
+    spec: mergedConfigs[nodeGroup] + fallback(mergedConfigs[nodeGroup], 'machineConfigPoolSelector', {
+      matchExpressions: [
+        {
+          key: 'pools.operator.machineconfiguration.openshift.io/%s' % nodeGroup,
+          operator: 'Exists',
+        },
+      ],
+    }),
   }
-  for nodeGroup in std.objectFields(params.containerRuntimeConfigs)
-  if params.containerRuntimeConfigs[nodeGroup] != null
+  for nodeGroup in std.objectFields(mergedConfigs)
+  if mergedConfigs[nodeGroup] != null
 ];
 
 {

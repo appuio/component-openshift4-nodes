@@ -20,5 +20,7 @@ parameters:
       app:
         kubelet:
           kubeletConfig:
-            maxPods: 200
+            maxPods: 1337
+        containerRuntime:
+          pidsLimit: 1337
       flex: {}
