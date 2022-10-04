@@ -6,12 +6,16 @@ local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
 
-local mergedConfigs = std.prune(
-  std.mapWithKey(
-    function(key, obj) std.get(obj, 'containerRuntime', null),
-    params.machineConfigPools
-  )
-) + com.makeMergeable(params.containerRuntimeConfigs);
+local mergedConfigs =
+  std.foldl(
+    function(configs, name)
+      local pool = params.machineConfigPools[name];
+      configs {
+        [if std.objectHas(pool, 'containerRuntime') then name]: pool.containerRuntime,
+      },
+    std.objectFields(params.machineConfigPools),
+    {}
+  ) + com.makeMergeable(params.containerRuntimeConfigs);
 
 
 local containerRuntimeConfigs = [

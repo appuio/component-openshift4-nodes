@@ -29,12 +29,16 @@ local kubeletConfig(name) = kube._Object('machineconfiguration.openshift.io/v1',
   },
 };
 
-local mergedConfigs = std.prune(
-  std.mapWithKey(
-    function(key, obj) std.get(obj, 'kubelet', null),
-    params.machineConfigPools
-  )
-) + com.makeMergeable(params.kubeletConfigs);
+local mergedConfigs =
+  std.foldl(
+    function(configs, name)
+      local pool = params.machineConfigPools[name];
+      configs {
+        [if std.objectHas(pool, 'kubelet') then name]: pool.kubelet,
+      },
+    std.objectFields(params.machineConfigPools),
+    {}
+  ) + com.makeMergeable(params.kubeletConfigs);
 
 local kubeletConfigs = [
   local fallback(parent, key, obj) = {
