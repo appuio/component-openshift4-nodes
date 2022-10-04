@@ -22,7 +22,8 @@ parameters:
           kubeletConfig:
             maxPods: 1337
         containerRuntime:
-          pidsLimit: 1337
+          containerRuntimeConfig:
+            pidsLimit: 1337
         machineConfigs:
           ssh:
             config:
@@ -30,18 +31,10 @@ parameters:
                 version: 3.2.0
               passwd:
                 users:
-                - name: app
+                - name: core
                   sshAuthorizedKeys:
                   - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
-          ssh2:
-            config:
-              ignition:
-                version: 3.2.0
-              passwd:
-                users:
-                - name: app2
-                  sshAuthorizedKeys:
-                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+
       flex:
         machineConfigs:
           ssh:
@@ -50,7 +43,7 @@ parameters:
                 version: 3.2.0
               passwd:
                 users:
-                - name: flex
+                - name: core
                   sshAuthorizedKeys:
                   - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
 

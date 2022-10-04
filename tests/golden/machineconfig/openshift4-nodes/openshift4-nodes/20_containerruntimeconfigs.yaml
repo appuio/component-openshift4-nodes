@@ -9,8 +9,9 @@ metadata:
     name: app
   name: app
 spec:
+  containerRuntimeConfig:
+    pidsLimit: 1337
   machineConfigPoolSelector:
     matchExpressions:
       - key: pools.operator.machineconfiguration.openshift.io/app
         operator: Exists
-  pidsLimit: 1337
