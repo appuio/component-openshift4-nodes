@@ -22,6 +22,7 @@ local PatchMachineConfigPool(name) = {
   },
   kubelet:: {},
   containerRuntime:: {},
+  machineConfigs:: {},
   spec+:
     fallback(
       'machineConfigSelector', {

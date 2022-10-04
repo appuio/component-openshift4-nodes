@@ -23,4 +23,49 @@ parameters:
             maxPods: 1337
         containerRuntime:
           pidsLimit: 1337
-      flex: {}
+        machineConfigs:
+          ssh:
+            config:
+              ignition:
+                version: 3.2.0
+              passwd:
+                users:
+                - name: app
+                  sshAuthorizedKeys:
+                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+          ssh2:
+            config:
+              ignition:
+                version: 3.2.0
+              passwd:
+                users:
+                - name: app2
+                  sshAuthorizedKeys:
+                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+      flex:
+        machineConfigs:
+          ssh:
+            config:
+              ignition:
+                version: 3.2.0
+              passwd:
+                users:
+                - name: flex
+                  sshAuthorizedKeys:
+                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+
+
+    machineConfigs:
+      worker-ssh:
+        metadata:
+          labels:
+            machineconfiguration.openshift.io/role: worker
+        spec:
+          config:
+            ignition:
+              version: 3.2.0
+            passwd:
+              users:
+              - name: core
+                sshAuthorizedKeys:
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
