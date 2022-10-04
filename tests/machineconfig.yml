@@ -9,11 +9,11 @@ parameters:
         spec:
           machineConfigSelector:
             matchExpressions:
-            - key: machineconfiguration.openshift.io/role
-              operator: In
-              values:
-              - worker
-              - ceph
+              - key: machineconfiguration.openshift.io/role
+                operator: In
+                values:
+                  - worker
+                  - ceph
           nodeSelector:
             matchLabels:
               node-role.kubernetes.io/ceph: ""
@@ -31,9 +31,9 @@ parameters:
                 version: 3.2.0
               passwd:
                 users:
-                - name: core
-                  sshAuthorizedKeys:
-                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+                  - name: core
+                    sshAuthorizedKeys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
 
       flex:
         machineConfigs:
@@ -43,9 +43,9 @@ parameters:
                 version: 3.2.0
               passwd:
                 users:
-                - name: core
-                  sshAuthorizedKeys:
-                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+                  - name: core
+                    sshAuthorizedKeys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
 
 
     machineConfigs:
@@ -59,6 +59,6 @@ parameters:
               version: 3.2.0
             passwd:
               users:
-              - name: core
-                sshAuthorizedKeys:
-                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+                - name: core
+                  sshAuthorizedKeys:
+                    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
