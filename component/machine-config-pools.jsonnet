@@ -30,7 +30,7 @@ local PatchMachineConfigPool(name) = {
           {
             key: 'machineconfiguration.openshift.io/role',
             operator: 'In',
-            values: [ 'worker', name ],
+            values: [ 'worker', 'x-%s' % name, name ],
           },
         ],
       }

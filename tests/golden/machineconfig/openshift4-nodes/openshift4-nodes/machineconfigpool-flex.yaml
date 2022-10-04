@@ -16,6 +16,7 @@ spec:
         operator: In
         values:
           - worker
+          - x-flex
           - flex
   nodeSelector:
     matchLabels:
