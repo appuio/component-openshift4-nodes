@@ -28,15 +28,6 @@ Most probably the one of the cloud region.
 This is currently only supported on GCP.
 ====
 
-== `containerRuntimeConfigs`
-
-[horizontal]
-type:: dict
-default:: `{}`
-
-This parameter accepts a key-value dict where the values are of kind `machineconfiguration.openshift.io/v1/ContainerRuntimeConfig`.
-The keys are resulting `metadata.name` and the values reflect the `.spec` field of `ContainerRuntimeConfig`.
-
 == `defaultSpecs`
 
 [horizontal]
@@ -172,6 +163,134 @@ default:: See <<defaultSpec>>.
 This gives you the full control over the resulting MachineSet.
 Values given here will be merged with precedence with the defaults configured in <<defaultSpec>>.
 The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
+
+== `machineConfigPools`
+
+[horizontal]
+type:: dictionary
+
+A dictionary of machine config pools to create on the cluster.
+The resulting `MachineConfigPool` object will have the key prefixed with `x-` as the name and the value is merged into the resource.
+
+Apart from the machine config pool, this dictionary can manage related resources through the following fields, that won't be added to the `MachineConfigPool` object.
+
+* The **kubelet** field can contain the spec of a `KubeletConfig` resource.
+The machine config pool key will be used as the name and the `machineConfigPoolSelector` will be set automatically.
+* The **containerRuntime** field can contain the spec of a `ContainerRuntimeConfig` resource.
+The machine config pool key will be used as the name and the `machineConfigPoolSelector` will be set automatically.
+* The **machineConfigs** accepts a key-value dict where the values are the `spec` of `MachineConfig` resources.
+The resulting `MachineConfig` objects will have the keys, prefixed with `99x-` and the machine config pool key, as the name and the values are used as the `spec`.
+The objects will automatically be labeled so that the machine config pool will pick up the config.
+
+
+By default the component creates `app`, `infra`, and `storage` machine config pools, which are an extension of the `worker` pool.
+Config pools can be removed by setting their dictionary value to `null`.
+
+.Example
+[source,yaml]
+----
+  machineConfigPools:
+    master:
+      kubelet:
+        kubeletConfig:
+          maxPods: 60
+    app:
+      spec:
+        maxUnvailable: 3
+      kubelet: <1>
+        kubeletConfig:
+          maxPods: 1337
+      containerRuntime: <2>
+        containerRuntimeConfig:
+          pidsLimit: 1337
+      machineConfigs:
+        testfile: <3>
+          config:
+            ignition:
+              version: 3.2.0
+            storage:
+              files:
+              - contents:
+                  source: data:,custom
+                filesystem: root
+                mode: 0644
+                path: /etc/customtest
+        testfile2: <4>
+          config:
+            ignition:
+              version: 3.2.0
+            storage:
+              files:
+              - contents:
+                  source: data:,custom
+                filesystem: root
+                mode: 0644
+                path: /etc/customtest2
+----
+<1> Results in a `KubeletConfig` object called `app`
+<2> Results in a `ContainerRuntimeConfig` object called `app`
+<3> Results in a `MachineConfig` object called `99x-app-testfile`
+<4> Results in a `MachineConfig` object called `99x-app-testfile2`
+
+
+[NOTE]
+====
+Machine config pool names are prefixed with `x-` as in some cases configurations are applied ordered by their name and we want the config for `x-app` to be applied after the default worker config of the `worker` pool.
+====
+
+[NOTE]
+====
+The component doesn't manage machine config pools `master` and `worker` as these are maintained directly by OpenShift.
+Any changes to these machine config pools will be ignored.
+
+You can however manage related resources for these pools through the extra fields `kubelet`, `containerRuntime`, and `machineConfigs`.
+====
+
+== `machineConfigs`
+
+[horizontal]
+type:: dict
+default:: `{}`
+
+This parameter accepts a key-value dict where the values are of kind `machineconfiguration.openshift.io/v1/MachineConfig`.
+The resulting `MachineConfig` objects will have the keys, prefixed with `99x-`, as the name and the values are merged into the resource.
+
+Reference the https://docs.openshift.com/container-platform/4.11/post_installation_configuration/machine-configuration-tasks.html[upstream documentation] on how to use machine config objects.
+
+.Example
+[source,yaml]
+----
+machineConfigs:
+  worker-ssh:
+    metadata:
+      labels:
+        machineconfiguration.openshift.io/role: worker
+    spec:
+      config:
+        ignition:
+          version: 3.2.0
+        passwd:
+          users:
+            - name: core
+              sshAuthorizedKeys:
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+----
+
+[NOTE]
+====
+Keep in mind that machine config objects are evaluated in order of their name.
+This is also the reason why the machine config names are prefixed with `99x-` so that they're evaluated after the default OpenShift machine configuration.
+====
+
+== `containerRuntimeConfigs`
+
+[horizontal]
+type:: dict
+default:: `{}`
+
+This parameter accepts a key-value dict where the values are of kind `machineconfiguration.openshift.io/v1/ContainerRuntimeConfig`.
+The keys are resulting `metadata.name` and the values reflect the `.spec` field of `ContainerRuntimeConfig`.
+
 
 == `kubeletConfigs`
 
