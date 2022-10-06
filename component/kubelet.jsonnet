@@ -4,6 +4,8 @@ local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 
+local machineConfigPools = import 'machine-config-pools.libsonnet';
+
 local params = inv.parameters.openshift4_nodes;
 
 local checkMaxPods(config) =
@@ -29,31 +31,11 @@ local kubeletConfig(name) = kube._Object('machineconfiguration.openshift.io/v1',
   },
 };
 
-local mergedConfigs =
-  std.foldl(
-    function(configs, name)
-      local pool = params.machineConfigPools[name];
-      configs {
-        [if std.objectHas(pool, 'kubelet') then name]: pool.kubelet,
-      },
-    std.objectFields(params.machineConfigPools),
-    {}
-  ) + com.makeMergeable(params.kubeletConfigs);
+local mergedConfigs = machineConfigPools.KubeletConfigs + com.makeMergeable(params.kubeletConfigs);
 
 local kubeletConfigs = [
-  local fallback(parent, key, obj) = {
-    [if !std.objectHas(parent, key) then key]: obj,
-  };
-  local spec = checkMaxPods(mergedConfigs[nodeGroup]);
   kubeletConfig(nodeGroup) {
-    spec: spec + fallback(spec, 'machineConfigPoolSelector', {
-      matchExpressions: [
-        {
-          key: 'pools.operator.machineconfiguration.openshift.io/%s' % nodeGroup,
-          operator: 'Exists',
-        },
-      ],
-    }),
+    spec: checkMaxPods(mergedConfigs[nodeGroup]),
   }
   for nodeGroup in std.objectFields(mergedConfigs)
   if mergedConfigs[nodeGroup] != null
