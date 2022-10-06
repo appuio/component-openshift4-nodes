@@ -26,7 +26,34 @@ local getConfigs(parameter) =
 local kubelet = getConfigs('kubelet');
 local containerRuntime = getConfigs('containerRuntime');
 
+local machineConfigsFromSpecs(pool, specs) =
+  std.foldl(
+    function(configs, name)
+      local spec = specs[name];
+      configs {
+        ['%s-%s' % [ pool, name ]]: {
+          metadata: {
+            labels: {
+              'machineconfiguration.openshift.io/role': pool,
+            },
+          },
+          spec: spec,
+        },
+      }, std.objectFields(specs), {}
+  );
+
+local machineConfig = std.foldl(
+  function(configs, name)
+    local pool = params.machineConfigPools[name];
+    local machineConfigSpecs = std.get(pool, 'machineConfigs', default={});
+    configs + machineConfigsFromSpecs(name, machineConfigSpecs),
+  std.objectFields(params.machineConfigPools),
+  {}
+);
+
+
 {
   KubeletConfigs: kubelet,
   ContainerRuntimeConfigs: containerRuntime,
+  MachineConfigs: machineConfig,
 }
