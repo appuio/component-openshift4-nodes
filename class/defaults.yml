@@ -45,8 +45,13 @@ parameters:
 
     nodeGroups: {}
 
-    containerRuntimeConfigs: {}
+    machineConfigPools:
+      infra: {}
+      app: {}
+      storage: {}
 
+    machineConfigs: {}
+    containerRuntimeConfigs: {}
     kubeletConfigs:
       workers:
         machineConfigPoolSelector:
@@ -55,6 +60,7 @@ parameters:
               operator: Exists
         kubeletConfig:
           maxPods: 110
+
 
     debugNamespace: syn-debug-nodes
 

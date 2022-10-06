@@ -1,0 +1,17 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: ContainerRuntimeConfig
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    name: app
+  name: app
+spec:
+  containerRuntimeConfig:
+    pidsLimit: 1337
+  machineConfigPoolSelector:
+    matchExpressions:
+      - key: pools.operator.machineconfiguration.openshift.io/app
+        operator: Exists

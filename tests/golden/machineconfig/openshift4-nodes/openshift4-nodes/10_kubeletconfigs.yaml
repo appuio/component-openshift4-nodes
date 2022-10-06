@@ -1,0 +1,35 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    name: app
+  name: app
+spec:
+  kubeletConfig:
+    maxPods: 1337
+  machineConfigPoolSelector:
+    matchExpressions:
+      - key: pools.operator.machineconfiguration.openshift.io/app
+        operator: Exists
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    name: workers
+  name: workers
+spec:
+  kubeletConfig:
+    maxPods: 110
+  machineConfigPoolSelector:
+    matchExpressions:
+      - key: pools.operator.machineconfiguration.openshift.io/worker
+        operator: Exists

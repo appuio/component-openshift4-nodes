@@ -4,6 +4,8 @@ local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 
+local machineConfigPools = import 'machine-config-pools.libsonnet';
+
 local params = inv.parameters.openshift4_nodes;
 
 local checkMaxPods(config) =
@@ -22,15 +24,21 @@ local checkMaxPods(config) =
   else
     config;
 
+
+local kubeletConfig(name) = kube._Object('machineconfiguration.openshift.io/v1', 'KubeletConfig', name) {
+  metadata+: {
+    labels+: common.DefaultLabels,
+  },
+};
+
+local mergedConfigs = machineConfigPools.KubeletConfigs + com.makeMergeable(params.kubeletConfigs);
+
 local kubeletConfigs = [
-  kube._Object('machineconfiguration.openshift.io/v1', 'KubeletConfig', nodeGroup) {
-    metadata+: {
-      labels+: common.DefaultLabels,
-    },
-    spec: checkMaxPods(params.kubeletConfigs[nodeGroup]),
+  kubeletConfig(nodeGroup) {
+    spec: checkMaxPods(mergedConfigs[nodeGroup]),
   }
-  for nodeGroup in std.objectFields(params.kubeletConfigs)
-  if params.kubeletConfigs[nodeGroup] != null
+  for nodeGroup in std.objectFields(mergedConfigs)
+  if mergedConfigs[nodeGroup] != null
 ];
 
 {

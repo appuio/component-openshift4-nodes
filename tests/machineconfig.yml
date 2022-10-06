@@ -1,0 +1,64 @@
+parameters:
+  openshift4_nodes:
+    machineConfigPools:
+      master:
+        nodeSelector:
+          matchLabels:
+            node-role.kubernetes.io/wrongNode: ""
+      storage:
+        spec:
+          machineConfigSelector:
+            matchExpressions:
+              - key: machineconfiguration.openshift.io/role
+                operator: In
+                values:
+                  - worker
+                  - ceph
+          nodeSelector:
+            matchLabels:
+              node-role.kubernetes.io/ceph: ""
+      app:
+        kubelet:
+          kubeletConfig:
+            maxPods: 1337
+        containerRuntime:
+          containerRuntimeConfig:
+            pidsLimit: 1337
+        machineConfigs:
+          ssh:
+            config:
+              ignition:
+                version: 3.2.0
+              passwd:
+                users:
+                  - name: core
+                    sshAuthorizedKeys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+
+      flex:
+        machineConfigs:
+          ssh:
+            config:
+              ignition:
+                version: 3.2.0
+              passwd:
+                users:
+                  - name: core
+                    sshAuthorizedKeys:
+                      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+
+
+    machineConfigs:
+      worker-ssh:
+        metadata:
+          labels:
+            machineconfiguration.openshift.io/role: worker
+        spec:
+          config:
+            ignition:
+              version: 3.2.0
+            passwd:
+              users:
+                - name: core
+                  sshAuthorizedKeys:
+                    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
