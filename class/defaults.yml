@@ -46,10 +46,6 @@ parameters:
     nodeGroups: {}
 
     machineConfigPools:
-      # master and worker pools are not managed by the component
-      master: {}
-      worker: {}
-
       infra: {}
       app: {}
       storage: {}
