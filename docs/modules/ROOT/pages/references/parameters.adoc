@@ -183,7 +183,7 @@ The resulting `MachineConfig` objects will have the keys, prefixed with `99x-` a
 The objects will automatically be labeled so that the machine config pool will pick up the config.
 
 
-By default the component creates `app`, `infra`, and `storage` machine config pools, which are an extension of the `worker` pool.
+By default the component creates `app`, `infra`, and `storage` machine config pools, each of which extends the `worker` pool.
 Config pools can be removed by setting their dictionary value to `null`.
 
 .Example
@@ -238,7 +238,7 @@ Config pools can be removed by setting their dictionary value to `null`.
 Machine config pool names are prefixed with `x-` as in some cases configurations are applied ordered by their name and we want the config for `x-app` to be applied after the default worker config of the `worker` pool.
 ====
 
-[NOTE]
+[IMPORTANT]
 ====
 The component doesn't manage machine config pools `master` and `worker` as these are maintained directly by OpenShift.
 Any changes to these machine config pools will be ignored.
