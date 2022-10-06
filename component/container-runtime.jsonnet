@@ -10,11 +10,14 @@ local params = inv.parameters.openshift4_nodes;
 
 local mergedConfigs = machineConfigPools.ContainerRuntimeConfigs + com.makeMergeable(params.containerRuntimeConfigs);
 
+local containerRuntimeConfig(name) = kube._Object('machineconfiguration.openshift.io/v1', 'ContainerRuntimeConfig', name) {
+  metadata+: {
+    labels+: common.DefaultLabels,
+  },
+};
+
 local containerRuntimeConfigs = [
-  kube._Object('machineconfiguration.openshift.io/v1', 'ContainerRuntimeConfig', nodeGroup) {
-    metadata+: {
-      labels+: common.DefaultLabels,
-    },
+  containerRuntimeConfig(nodeGroup) {
     spec: mergedConfigs[nodeGroup],
   }
   for nodeGroup in std.objectFields(mergedConfigs)
