@@ -1,9 +1,9 @@
 = Managing Machine Config Pools
 
-This component allows you to manage machine config pool and all related configuration, including `MachineConfigs`, `KubeletConfigs`, and `ContainerRuntimeConfigs`.
-If you wan to get a better understanding of machine config pools, please read the https://docs.openshift.com/container-platform/4.7/post_installation_configuration/machine-configuration-tasks.html[upstream documentation] or https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work[this blog post from RedHat].
+This component allows you to manage machine config pools and all related configuration, including `MachineConfigs`, `KubeletConfigs`, and `ContainerRuntimeConfigs`.
+If you wan to get a better understanding of machine config pools, please read the https://docs.openshift.com/container-platform/latest/post_installation_configuration/machine-configuration-tasks.html[upstream documentation] or https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work[this blog post from RedHat].
 
-On this page we'll provide some explanations and examples on how to configure exiting or add new machine config pools.
+On this page we'll provide some explanations and examples which demonstrate how to configure existing machine config pools and how to add new machine config pools.
 
 == Default Machine Config Pools
 
@@ -30,22 +30,22 @@ Being a sub-pool of the worker pool means it will inherit all configuration of t
 
 == Configuring Machine Config Pools
 
-The component allows you to configure machine config pools and their related resource through the `machineConfigPools` parameter.
+The component allows you to configure machine config pools and their related resources through the `machineConfigPools` parameter.
 
-* The https://docs.openshift.com/container-platform/4.11/rest_api/machine_apis/machineconfigpool-machineconfiguration-openshift-io-v1.html[`MachineConfigPool` resource] itself can be managed through the `spec` parameter.
+* The https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/machineconfigpool-machineconfiguration-openshift-io-v1.html[`MachineConfigPool` resource] itself can be managed through the `spec` parameter.
 The component provides sane defaults for machine config and node selectors, which you generally shouldn't need to change.
 +
 NOTE: This can't be changed for the _master_ or _worker_ pool.
 
-* There is one https://docs.openshift.com/container-platform/4.11/rest_api/machine_apis/kubeletconfig-machineconfiguration-openshift-io-v1.html[`KubeletConfig` resource] per machine config pool that can be managed through the `kubelet` parameter.
+* There is one https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/kubeletconfig-machineconfiguration-openshift-io-v1.html[`KubeletConfig` resource] per machine config pool that can be managed through the `kubelet` parameter.
 The parameter contains the complete spec of the `KubeletConfig`.
 The `machineConfigPoolSelector` is set by the component and doesn't need to be modified.
 
-* There is also one https://docs.openshift.com/container-platform/4.11/rest_api/machine_apis/containerruntimeconfig-machineconfiguration-openshift-io-v1.html[`ContainerRuntimeConfig` resource] per machine config pool that can be managed through the `containerRuntime` parameter.
+* There is also one https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/containerruntimeconfig-machineconfiguration-openshift-io-v1.html[`ContainerRuntimeConfig` resource] per machine config pool that can be managed through the `containerRuntime` parameter.
 The parameter contains the complete spec of the `ContainerRuntimeConfig`.
 The `machineConfigPoolSelector` is again set by the component and doesn't need to be modified.
 
-* An arbitrary number of https://docs.openshift.com/container-platform/4.11/rest_api/machine_apis/machineconfig-machineconfiguration-openshift-io-v1.html[`MachineConfig` resources] can be managed through the `machineConfigs` parameter.
+* An arbitrary number of https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/machineconfig-machineconfiguration-openshift-io-v1.html[`MachineConfig` resources] can be managed through the `machineConfigs` parameter.
 The component handles selectors and labels so that these machine configs are assigned to the corresponding pool.
 
 [IMPORTANT]
@@ -57,7 +57,7 @@ Below you can see a few example configurations that should illustrate how you ca
 
 === Example: Modifying App Pool
 
-Let's assume we're running a large cluster with more than 10 large app nodes.
+Let's assume that we're running a large cluster with more than 10 large app nodes.
 Although there are enough resources available, we run into the pod limit and we'd need to add another node.
 At the same time maintenance is starting to take a long time, as each node is restarted sequentially.
 We decided to do two changes:
@@ -127,9 +127,10 @@ EOF
 == Adding new Machine Config Pools
 
 This component allows you to add an arbitrary number of machine config pools.
-However each of these pools will be a sub-pool of the _worker_ machine config pool, which means it will inherit all configuration of that pool.
+All custom machine config pools will be sub-pools of the _worker_ machine config pool.
+Therefore, they'll all inherit all configuration of the _worker_ pool.
 
-Currently the component doesn't handle adding and labeling the node themselves.
+Currently the component doesn't provide support for adding and labeling the nodes themselves.
 
 === Example: Add GPU Nodes
 
