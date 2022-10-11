@@ -1,0 +1,198 @@
+= Managing Machine Config Pools
+
+This component allows you to manage machine config pools and all related configuration, including `MachineConfigs`, `KubeletConfigs`, and `ContainerRuntimeConfigs`.
+If you wan to get a better understanding of machine config pools, please read the https://docs.openshift.com/container-platform/latest/post_installation_configuration/machine-configuration-tasks.html[upstream documentation] or https://www.redhat.com/en/blog/openshift-container-platform-4-how-does-machine-config-pool-work[this blog post from RedHat].
+
+On this page we'll provide some explanations and examples which demonstrate how to configure existing machine config pools and how to add new machine config pools.
+
+== Default Machine Config Pools
+
+On a default APPUiO OpenShift 4 cluster there are five machine config pools.
+
+There are two that are always present and managed by OpenShift directly.
+These can't be removed or modified through the component.
+
+* The *master* pool contains all master nodes.
+* The *worker* pool contains all other nodes.
+
+On an APPUiO OpenShift 4 cluster the *worker* pool is further split into different sub-pools
+
+* The *app* pool contains the actual _worker_ nodes that are used to run the users applications.
+* The *infra* pool contains the infra nodes that run OpenShift 4 workloads, such as Prometheus or Elasticsearch,
+* The *storage* pool contains the Ceph cluster deployed by component rook ceph.
+These nodes aren't always present, but the pool always exists.
+
+
+[NOTE]
+====
+Being a sub-pool of the worker pool means it will inherit all configuration of the worker pool, but it will still count as a separate pool.
+====
+
+== Configuring Machine Config Pools
+
+The component allows you to configure machine config pools and their related resources through the `machineConfigPools` parameter.
+
+* The https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/machineconfigpool-machineconfiguration-openshift-io-v1.html[`MachineConfigPool` resource] itself can be managed through the `spec` parameter.
+The component provides sane defaults for machine config and node selectors, which you generally shouldn't need to change.
++
+NOTE: This can't be changed for the _master_ or _worker_ pool.
+
+* There is one https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/kubeletconfig-machineconfiguration-openshift-io-v1.html[`KubeletConfig` resource] per machine config pool that can be managed through the `kubelet` parameter.
+The parameter contains the complete spec of the `KubeletConfig`.
+The `machineConfigPoolSelector` is set by the component and doesn't need to be modified.
+
+* There is also one https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/containerruntimeconfig-machineconfiguration-openshift-io-v1.html[`ContainerRuntimeConfig` resource] per machine config pool that can be managed through the `containerRuntime` parameter.
+The parameter contains the complete spec of the `ContainerRuntimeConfig`.
+The `machineConfigPoolSelector` is again set by the component and doesn't need to be modified.
+
+* An arbitrary number of https://docs.openshift.com/container-platform/latest/rest_api/machine_apis/machineconfig-machineconfiguration-openshift-io-v1.html[`MachineConfig` resources] can be managed through the `machineConfigs` parameter.
+The component handles selectors and labels so that these machine configs are assigned to the corresponding pool.
+
+[IMPORTANT]
+====
+Changes that impact a nodes configuration, such as modifying kubelet config or container runtime config, will restart all nodes in the machine config pool.
+====
+
+Below you can see a few example configurations that should illustrate how you can manage existing machine config pools.
+
+=== Example: Modifying App Pool
+
+Let's assume that we're running a large cluster with more than 10 large app nodes.
+Although there are enough resources available, we run into the pod limit and we'd need to add another node.
+At the same time maintenance is starting to take a long time, as each node is restarted sequentially.
+We decided to do two changes:
+
+* Increase the maximum number of pods per node to `200`
+* Allow OpenShift to restart two app nodes in parallel during upgrades
+
+This allow us to better utilize the available resources and reduces the maintenance time.
+We can achieve this with the following configuration.
+
+[source,yaml]
+----
+  machineConfigPools:
+    app:
+      spec:
+        maxUnvailable: 2 <1>
+      kubelet:
+        kubeletConfig:
+          maxPods: 200 <2>
+----
+<1> Allows OpenShift to reboot two app nodes at the same time
+<2> Schedules up to `200` pods per node
+
+=== Example: Configuring Master Nodes
+
+The *master* and *worker* pools are managed by OpenShift and come with default configuration.
+This component doesn't directly manage these `MachineConfigPool` resources, but we can still add additional machine configs.
+
+Let's say we want to configure chrony on the master nodes to use our own NTP server.
+
+. First encode the chrony configuration as base64
++
+[source,shell]
+----
+cat << EOF | base64
+    pool ntp.example.com iburst <1>
+    driftfile /var/lib/chrony/drift
+    makestep 1.0 3
+    rtcsync
+    logdir /var/log/chrony
+EOF
+----
+<1> Specify any valid, reachable time source, such as the one provided by your DHCP server
+
+. Then add this to all master nodes using the following configuration
++
+[source,yaml]
+----
+  machineConfigPools:
+    master:
+      machineConfigs:
+        chrony:
+          config:
+            ignition:
+              version: 3.2.0
+            storage:
+              files:
+              - contents: <1>
+                  source: data:text/plain;charset=utf-8;base64,ICAgIHBvb2wgbnRwLmV4YW1wbGUuY29tIGlidXJzdCA8MT4KICAgIGRyaWZ0ZmlsZSAvdmFyL2xpYi9jaHJvbnkvZHJpZnQKICAgIG1ha2VzdGVwIDEuMCAzCiAgICBydGNzeW5jCiAgICBsb2dkaXIgL3Zhci9sb2cvY2hyb255Cg==
+                mode: 420
+                overwrite: true
+                path: /etc/chrony.conf
+
+----
+<1> Base64 encoded chrony configuration
+
+== Adding new Machine Config Pools
+
+This component allows you to add an arbitrary number of machine config pools.
+All custom machine config pools will be sub-pools of the _worker_ machine config pool.
+Therefore, they'll all inherit all configuration of the _worker_ pool.
+
+Currently the component doesn't provide support for adding and labeling the nodes themselves.
+
+=== Example: Add GPU Nodes
+
+We want to add special nodes that have access to to a GPU.
+We handle these nodes in a different machine config pool, as we anticipate that they'll need different configuration.
+
+. Let's say we added two new worker nodes with GPUs.
+We currently need to manually label these two nodes to give them the correct role.
++
+[source,shell]
+----
+$ kubectl get nodes
+..
+gpu-32ac    Ready    worker       1h   v1.23.5+8471591
+gpu-e226    Ready    worker       1h   v1.23.5+8471591
+----
++
+[source,shell]
+----
+kubectl label node gpu-32ac node-role.kubernetes.io/gpu=""
+kubectl label node gpu-e226 node-role.kubernetes.io/gpu=""
+----
++
+[source,shell]
+----
+$ kubectl get nodes
+..
+gpu-32ac    Ready    gpu,worker   1h   v1.23.5+8471591
+gpu-e226    Ready    gpu,worker   1h   v1.23.5+8471591
+----
+
+. With the nodes labeled we can add another machine config pool with the following configuration
++
+[source,yaml]
+----
+  machineConfigPools:
+    gpu: {}
+----
+
+. After a few minutes you should see that the machine config pool has adopted the two nodes
++
+[source,shell]
+----
+$ kubectl get machineconfigpools.machineconfiguration.openshift.io
+NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
+...
+x-gpu    rendered-x-gpu-9b16524c1512d9327f940e736f322ef1    True      False      False      2              2                   2                     0                      20m
+----
+
+[IMPORTANT]
+====
+A node can only belong to the worker pool and up to *one* other pool.
+Sub-pools for master nodes or adding a node to more than one sub-pool isn't supported.
+
+If you add a node to more than one sub-pool it'll be removed from all pools and won't be managed by OpenShift.
+====
+
+[NOTE]
+====
+You have the option to remove added machine config pools or even remove the three default pools _app_, _infra_, and _storage_.
+However, before doing so you need to make sure that *no node is assigned* to the to-be removed machine config pool.
+
+You can do this by removing the associated label or by modifying the node selector of the machine config pool before removing the pool.
+If you don't do this, OpenShift will be confused and the nodes won't be assigned to any machine config pool.
+====

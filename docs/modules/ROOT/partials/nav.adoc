@@ -1,2 +1,4 @@
 * xref:index.adoc[Home]
 * xref:references/parameters.adoc[Parameters]
+* Explanations
+** xref:explanations/machine-config-pool.adoc[Machine Config Pools]
