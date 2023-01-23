@@ -43,6 +43,48 @@ spec:
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
+  annotations:
+    inline-contents.machineconfig.syn.tools/etc-chrony.conf: '# Use ch.pool.ntp.org
+
+      pool ch.pool.ntp.org iburst
+
+      # Rest is copied from the default config
+
+      driftfile /var/lib/chrony/drift
+
+      makestep 1.0 3
+
+      rtcsync
+
+      keyfile /etc/chrony.keys
+
+      leapsectz right/UTC
+
+      logdir /var/log/chrony
+
+      '
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    machineconfiguration.openshift.io/role: worker
+    name: 99x-worker-chrony-custom
+  name: 99x-worker-chrony-custom
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+        - contents:
+            source: data:text/plain;encoding=utf-8;base64,IyBVc2UgY2gucG9vbC5udHAub3JnCnBvb2wgY2gucG9vbC5udHAub3JnIGlidXJzdAojIFJlc3QgaXMgY29waWVkIGZyb20gdGhlIGRlZmF1bHQgY29uZmlnCmRyaWZ0ZmlsZSAvdmFyL2xpYi9jaHJvbnkvZHJpZnQKbWFrZXN0ZXAgMS4wIDMKcnRjc3luYwprZXlmaWxlIC9ldGMvY2hyb255LmtleXMKbGVhcHNlY3R6IHJpZ2h0L1VUQwpsb2dkaXIgL3Zhci9sb2cvY2hyb255Cg==
+          mode: 420
+          overwrite: true
+          path: /etc/chrony.conf
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
   annotations: {}
   labels:
     app.kubernetes.io/component: openshift4-nodes

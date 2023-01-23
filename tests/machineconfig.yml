@@ -62,3 +62,28 @@ parameters:
                 - name: core
                   sshAuthorizedKeys:
                     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
+      worker-chrony-custom:
+        metadata:
+          labels:
+            machineconfiguration.openshift.io/role: worker
+        spec:
+          config:
+            ignition:
+              version: 3.2.0
+            storage:
+              files:
+                - path: /etc/chrony.conf
+                  mode: 0644
+                  overwrite: true
+                  contents:
+                    # Inline gets rendered as `source: 'data:text/plain;encoding=utf-8;base64,<contents|base64>'`
+                    inline: |
+                      # Use ch.pool.ntp.org
+                      pool ch.pool.ntp.org iburst
+                      # Rest is copied from the default config
+                      driftfile /var/lib/chrony/drift
+                      makestep 1.0 3
+                      rtcsync
+                      keyfile /etc/chrony.keys
+                      leapsectz right/UTC
+                      logdir /var/log/chrony

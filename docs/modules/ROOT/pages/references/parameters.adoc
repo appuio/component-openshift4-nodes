@@ -276,6 +276,90 @@ machineConfigs:
                 - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID9BWBmqreqpn7cF9klFEeLrg/NWk3UAyvx7gj/cVFQn
 ----
 
+We add special support for defining file contents in the hierarchy with key `storage.files.X.source.inline` which isn't part of the Ignition spec.
+
+.Inline file contents example (custom `chrony.conf`)
+[source,yaml]
+----
+machineConfigs:
+  worker-chrony-custom:
+    metadata:
+      labels:
+        machineconfiguration.openshift.io/role: worker
+    spec:
+      config:
+        ignition:
+          version: 3.2.0
+        storage:
+          files:
+            - path: /etc/chrony.conf
+              mode: 0644
+              overwrite: true
+              contents:
+                # The contents of `inline` get rendered as
+                # `source: 'data:text/plain;encoding=utf-8;base64,<inline|base64>'`
+                inline: |
+                  # Use ch.pool.ntp.org
+                  pool ch.pool.ntp.org iburst
+                  # Rest is copied from the default config
+                  driftfile /var/lib/chrony/drift
+                  makestep 1.0 3
+                  rtcsync
+                  keyfile /etc/chrony.keys
+                  leapsectz right/UTC
+                  logdir /var/log/chrony
+----
+
+The resulting machine config for this example looks as follows:
+
+[source,yaml]
+----
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  annotations: <1>
+    inline-contents.machineconfig.syn.tools/etc-chrony.conf: '# Use ch.pool.ntp.org
+
+      pool ch.pool.ntp.org iburst
+
+      # Rest is copied from the default config
+
+      driftfile /var/lib/chrony/drift
+
+      makestep 1.0 3
+
+      rtcsync
+
+      keyfile /etc/chrony.keys
+
+      leapsectz right/UTC
+
+      logdir /var/log/chrony
+
+      '
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    machineconfiguration.openshift.io/role: worker
+    name: 99x-worker-chrony-custom
+  name: 99x-worker-chrony-custom
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+        - contents:
+            source: data:text/plain;encoding=utf-8;base64,IyBVc2UgY2gucG9vbC5udHAub3JnCnBvb2wgY2gucG9vbC5udHAub3JnIGlidXJzdAojIFJlc3QgaXMgY29waWVkIGZyb20gdGhlIGRlZmF1bHQgY29uZmlnCmRyaWZ0ZmlsZSAvdmFyL2xpYi9jaHJvbnkvZHJpZnQKbWFrZXN0ZXAgMS4wIDMKcnRjc3luYwprZXlmaWxlIC9ldGMvY2hyb255LmtleXMKbGVhcHNlY3R6IHJpZ2h0L1VUQwpsb2dkaXIgL3Zhci9sb2cvY2hyb255Cg== <2>
+          mode: 420
+          overwrite: true
+          path: /etc/chrony.conf
+----
+<1> The original inline file contents are added as an annotation to the resulting machine config object.
+<2> The actual entry in the files list in the Ignition config is encoded with base64 and added as a data scheme value (`data:text/plain;encoding=utf-8;base64,...`) in the `contents.source` field.
+See the https://coreos.github.io/ignition/configuration-v3_2/[Ignition spec] for more details on supported ways to specify file contents.
+
 [NOTE]
 ====
 Keep in mind that machine config objects are evaluated in order of their name.
