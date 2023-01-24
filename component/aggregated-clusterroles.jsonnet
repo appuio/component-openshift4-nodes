@@ -4,7 +4,7 @@ local kube = import 'lib/kube.libjsonnet';
   '01_aggregated_clusterroles': [
     kube.ClusterRole('syn-openshift4-nodes-cluster-reader') {
       metadata+: {
-        annotations+: {
+        labels+: {
           'rbac.authorization.k8s.io/aggregate-to-cluster-reader': 'true',
         },
       },
