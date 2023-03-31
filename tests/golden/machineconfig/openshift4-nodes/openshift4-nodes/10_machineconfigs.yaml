@@ -44,25 +44,16 @@ apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
   annotations:
-    inline-contents.machineconfig.syn.tools/etc-chrony.conf: '# Use ch.pool.ntp.org
-
+    inline-contents.machineconfig.syn.tools/etc-chrony.conf: |
+      # Use ch.pool.ntp.org
       pool ch.pool.ntp.org iburst
-
       # Rest is copied from the default config
-
       driftfile /var/lib/chrony/drift
-
       makestep 1.0 3
-
       rtcsync
-
       keyfile /etc/chrony.keys
-
       leapsectz right/UTC
-
       logdir /var/log/chrony
-
-      '
   labels:
     app.kubernetes.io/component: openshift4-nodes
     app.kubernetes.io/managed-by: commodore
