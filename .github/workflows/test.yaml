@@ -38,6 +38,7 @@ jobs:
           - pidslimit
           - syn-monitoring
           - machineconfig
+          - remove-machineconfigpool
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
@@ -58,6 +59,7 @@ jobs:
           - pidslimit
           - syn-monitoring
           - machineconfig
+          - remove-machineconfigpool
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}

@@ -1,0 +1,7 @@
+# Overwrite parameters here
+
+parameters:
+  openshift4_nodes:
+    machineConfigPools:
+      # Remove `storage` pool
+      storage: ~
