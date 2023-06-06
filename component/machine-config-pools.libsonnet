@@ -7,18 +7,21 @@ local getConfigs(parameter) =
   std.foldl(
     function(configs, name)
       local pool = params.machineConfigPools[name];
-      configs {
-        [if std.objectHas(pool, parameter) then name]: pool[parameter] {
-          machineConfigPoolSelector: {
-            matchExpressions: [
-              {
-                key: 'pools.operator.machineconfiguration.openshift.io/%s' % name,
-                operator: 'Exists',
-              },
-            ],
+      if pool != null then
+        configs {
+          [if std.objectHas(pool, parameter) then name]: pool[parameter] {
+            machineConfigPoolSelector: {
+              matchExpressions: [
+                {
+                  key: 'pools.operator.machineconfiguration.openshift.io/%s' % name,
+                  operator: 'Exists',
+                },
+              ],
+            },
           },
-        },
-      },
+        }
+      else
+        configs,
     std.objectFields(params.machineConfigPools),
     {}
   );
@@ -45,8 +48,11 @@ local machineConfigsFromSpecs(pool, specs) =
 local machineConfig = std.foldl(
   function(configs, name)
     local pool = params.machineConfigPools[name];
-    local machineConfigSpecs = std.get(pool, 'machineConfigs', default={});
-    configs + machineConfigsFromSpecs(name, machineConfigSpecs),
+    if pool != null then
+      local machineConfigSpecs = std.get(pool, 'machineConfigs', default={});
+      configs + machineConfigsFromSpecs(name, machineConfigSpecs)
+    else
+      configs,
   std.objectFields(params.machineConfigPools),
   {}
 );
