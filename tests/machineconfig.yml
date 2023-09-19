@@ -73,7 +73,7 @@ parameters:
             storage:
               files:
                 - path: /etc/chrony.conf
-                  mode: 0644
+                  mode: 420 # 0644
                   overwrite: true
                   contents:
                     # Inline gets rendered as `source: 'data:text/plain;encoding=utf-8;base64,<contents|base64>'`
