@@ -42,6 +42,8 @@ parameters:
                 tags: []
                 userDataSecret:
                   name: worker-user-data
+    nodeConfig:
+      cgroupMode: v1
 
     nodeGroups: {}
 
