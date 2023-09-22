@@ -84,7 +84,8 @@ cgroupMode: v1
 
 A dictionary holding the default values applied to the `node.config.openshift.io` object created by this component.
 
-You can switch between cgroup v1 and cgroup v2, as needed, by editing the node.config object. For more information, see https://docs.openshift.com/container-platform/latest/installing/install_config/enabling-cgroup-v2.html[Enabling Linux control group version 2].
+You can switch between cgroup v1 and cgroup v2, as needed, by editing the node.config object.
+For more information, see https://docs.openshift.com/container-platform/latest/installing/install_config/enabling-cgroup-v2.html[Enabling Linux control group version 2].
 
 == `nodeGroups`
 
