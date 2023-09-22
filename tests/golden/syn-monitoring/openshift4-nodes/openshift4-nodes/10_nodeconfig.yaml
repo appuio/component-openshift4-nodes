@@ -1,0 +1,9 @@
+apiVersion: config.openshift.io/v1
+kind: Node
+metadata:
+  annotations: {}
+  labels:
+    name: cluster
+  name: cluster
+spec:
+  cgroupMode: v1
