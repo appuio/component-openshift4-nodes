@@ -57,7 +57,7 @@ local machineConfigs = [
                   contents+: {
                     inline:: null,
                     source:
-                      'data:text/plain;encoding=utf-8;base64,%s' %
+                      'data:text/plain;charset=utf-8;base64,%s' %
                       std.base64(f.contents.inline),
                   },
                 }

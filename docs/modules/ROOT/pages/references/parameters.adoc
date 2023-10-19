@@ -312,7 +312,7 @@ machineConfigs:
               overwrite: true
               contents:
                 # The contents of `inline` get rendered as
-                # `source: 'data:text/plain;encoding=utf-8;base64,<inline|base64>'`
+                # `source: 'data:text/plain;charset=utf-8;base64,<inline|base64>'`
                 inline: |
                   # Use ch.pool.ntp.org
                   pool ch.pool.ntp.org iburst
@@ -366,13 +366,13 @@ spec:
     storage:
       files:
         - contents:
-            source: data:text/plain;encoding=utf-8;base64,IyBVc2UgY2gucG9vbC5udHAub3JnCnBvb2wgY2gucG9vbC5udHAub3JnIGlidXJzdAojIFJlc3QgaXMgY29waWVkIGZyb20gdGhlIGRlZmF1bHQgY29uZmlnCmRyaWZ0ZmlsZSAvdmFyL2xpYi9jaHJvbnkvZHJpZnQKbWFrZXN0ZXAgMS4wIDMKcnRjc3luYwprZXlmaWxlIC9ldGMvY2hyb255LmtleXMKbGVhcHNlY3R6IHJpZ2h0L1VUQwpsb2dkaXIgL3Zhci9sb2cvY2hyb255Cg== <2>
+            source: data:text/plain;charset=utf-8;base64,IyBVc2UgY2gucG9vbC5udHAub3JnCnBvb2wgY2gucG9vbC5udHAub3JnIGlidXJzdAojIFJlc3QgaXMgY29waWVkIGZyb20gdGhlIGRlZmF1bHQgY29uZmlnCmRyaWZ0ZmlsZSAvdmFyL2xpYi9jaHJvbnkvZHJpZnQKbWFrZXN0ZXAgMS4wIDMKcnRjc3luYwprZXlmaWxlIC9ldGMvY2hyb255LmtleXMKbGVhcHNlY3R6IHJpZ2h0L1VUQwpsb2dkaXIgL3Zhci9sb2cvY2hyb255Cg== <2>
           mode: 420
           overwrite: true
           path: /etc/chrony.conf
 ----
 <1> The original inline file contents are added as an annotation to the resulting machine config object.
-<2> The actual entry in the files list in the Ignition config is encoded with base64 and added as a data scheme value (`data:text/plain;encoding=utf-8;base64,...`) in the `contents.source` field.
+<2> The actual entry in the files list in the Ignition config is encoded with base64 and added as a data scheme value (`data:text/plain;charset=utf-8;base64,...`) in the `contents.source` field.
 See the https://coreos.github.io/ignition/configuration-v3_2/[Ignition spec] for more details on supported ways to specify file contents.
 
 [NOTE]
