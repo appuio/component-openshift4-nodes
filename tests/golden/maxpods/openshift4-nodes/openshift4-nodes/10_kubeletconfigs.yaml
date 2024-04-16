@@ -11,6 +11,8 @@ metadata:
 spec:
   kubeletConfig:
     maxPods: 999
+    systemReserved:
+      memory: 2Gi
   machineConfigPoolSelector:
     matchExpressions:
       - key: pools.operator.machineconfiguration.openshift.io/worker
