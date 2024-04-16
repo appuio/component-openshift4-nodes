@@ -14,7 +14,7 @@ local checkMaxPods(config) =
     && config.kubeletConfig.maxPods > 110
   then
     config {
-      kubeletConfig: {
+      kubeletConfig+: {
         maxPods: std.trace(
           '[WARNING] Upstream Kubernetes recommends to have maximum pods per node <= 110.',
           config.kubeletConfig.maxPods

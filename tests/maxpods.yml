@@ -5,3 +5,5 @@ parameters:
       workers:
         kubeletConfig:
           maxPods: 999
+          systemReserved:
+            memory: 2Gi
