@@ -14,5 +14,6 @@ parameters:
           - openshift4-nodes/component/container-runtime.jsonnet
           - openshift4-nodes/component/oc-debug-node.jsonnet
           - openshift4-nodes/component/aggregated-clusterroles.jsonnet
+          - openshift4-nodes/component/egress-interfaces.jsonnet
         input_type: jsonnet
         output_path: openshift4-nodes/
