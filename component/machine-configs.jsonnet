@@ -10,12 +10,6 @@ local params = inv.parameters.openshift4_nodes;
 
 local mergedConfigs = machineConfigPools.MachineConfigs + com.makeMergeable(params.machineConfigs);
 
-local MachineConfig(name) = kube._Object('machineconfiguration.openshift.io/v1', 'MachineConfig', '99x-%s' % name) {
-  metadata+: {
-    labels+: common.DefaultLabels,
-  },
-};
-
 local machineConfigs = [
   if std.objectHas(mc.spec.config, 'storage') &&
      std.objectHas(mc.spec.config.storage, 'files') then
@@ -71,7 +65,7 @@ local machineConfigs = [
     }
   else
     mc
-  for mc in com.generateResources(mergedConfigs, MachineConfig)
+  for mc in com.generateResources(mergedConfigs, common.MachineConfig)
 ];
 {
   [if std.length(machineConfigs) > 0 then '10_machineconfigs']: machineConfigs,
