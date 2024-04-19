@@ -13,7 +13,6 @@ parameters:
           - openshift4-nodes/component/kubelet.jsonnet
           - openshift4-nodes/component/container-runtime.jsonnet
           - openshift4-nodes/component/oc-debug-node.jsonnet
-          - openshift4-nodes/component/metrics.jsonnet
           - openshift4-nodes/component/aggregated-clusterroles.jsonnet
         input_type: jsonnet
         output_path: openshift4-nodes/

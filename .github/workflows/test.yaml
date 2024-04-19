@@ -36,7 +36,6 @@ jobs:
           - gcp
           - maxpods
           - pidslimit
-          - syn-monitoring
           - machineconfig
           - remove-machineconfigpool
     defaults:
@@ -57,7 +56,6 @@ jobs:
           - gcp
           - maxpods
           - pidslimit
-          - syn-monitoring
           - machineconfig
           - remove-machineconfigpool
     defaults:

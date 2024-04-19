@@ -65,12 +65,3 @@ parameters:
 
 
     debugNamespace: syn-debug-nodes
-
-    monitoring:
-      enabled: true
-      instance: null
-      enableServiceMonitors:
-        cluster-autoscaler-operator: true
-        machine-api-controllers: true
-        machine-api-operator: true
-        machine-config-daemon: true
