@@ -427,6 +427,55 @@ This component will take ownership of the namespace specified here.
 Please make sure you don't specify a namespace which is already managed by other means.
 ====
 
+== `egressInterfaces`
+
+[horizontal]
+type:: dictionary
+default::
++
+[source,yaml]
+----
+machineConfigPools: []
+nodeKubeconfig: /var/lib/kubelet/kubeconfig
+shadowRangeConfigMap:
+  namespace: cilium
+  name: eip-shadow-ranges
+----
+
+NOTE: This feature is intended to be used when configuring floating egress IPs with Cilium according to the design selected in https://kb.vshn.ch/oc4/explanations/decisions/cloudscale-cilium-egressip.html[Floating egress IPs with Cilium on cloudscale].
+
+This parameter will deploy a MachineConfig which configures a systemd service that sets up dummy interfaces for egress IPs on the nodes in each MachineConfigPool listed in field `machineConfigPools`.
+The component supports removal of MachineConfigPools by prefixing the pool with `~`.
+
+The systemd unit deployed by the script is configured to be executed after the node's network is online but before the Kubelet starts.
+The systemd unit executes a script which reads the required egress interfaces and associated IPs from the configmap indicated in parameter `shadowRangeConfigMap`.
+
+The script uses the file indicated in field `nodeKubeconfig` to fetch the ConfigMap from the cluster.
+If the default value is used, the script will use the node's Kubelet kubeconfig to access the cluster.
+To ensure the Kubelet can access the configmap, users should ensure that a pod which mounts the ConfigMap is running on the node.
+
+[TIP]
+====
+Component cilium can deploy a suitable ConfigMap and DaemonSets which ensure that the Kubelets on all nodes that need to create egress dummy interfaces can access the ConfigMap.
+See the documentation for http://localhost:2020/cilium/references/parameters.html#_egress_gateway_egress_ip_ranges[component-cilium's support for egress IP ranges] for details.
+====
+
+The script expects the ConfigMap to have a key matching each node name on which egress dummy interfaces should be configured.
+
+=== Example
+
+[source,yaml]
+----
+data:
+  infra-foo: '{"egress_a": {"base": "198.51.100", "from": "32", "to": "63"}}'
+  infra-bar: '{"egress_a": {"base": "198.51.100", "from": "64", "to": "95"}}'
+----
+
+For the ConfigMap data shown above the script will configure the following dummy interfaces:
+
+* `egress_a_0` - `egress_a_31` with IPs 198.51.100.32 - 195.51.100.63 on node infra-foo.
+* `egress_a_0` - `egress_a_31` with IPs 198.51.100.64 - 195.51.100.95 on node infra-bar.
+
 == Example
 
 [source,yaml]
