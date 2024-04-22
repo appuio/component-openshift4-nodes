@@ -87,3 +87,7 @@ parameters:
                       keyfile /etc/chrony.keys
                       leapsectz right/UTC
                       logdir /var/log/chrony
+
+    egressInterfaces:
+      machineConfigPools:
+        - infra

@@ -65,3 +65,10 @@ parameters:
 
 
     debugNamespace: syn-debug-nodes
+
+    egressInterfaces:
+      machineConfigPools: []
+      nodeKubeconfig: /var/lib/kubelet/kubeconfig
+      shadowRangeConfigMap:
+        namespace: cilium
+        name: eip-shadow-ranges
