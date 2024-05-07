@@ -27,35 +27,40 @@ local configs = [
     },
     spec+: {
       config: {
+        ignition: {
+          version: '3.4.0',
+        },
         storage: {
           files: [
             {
               path: '/usr/local/bin/appuio-create-egress-interfaces.sh',
               mode: std.parseOctal('0755'),
-              contents:
-                'data:text/plain;charset=utf-8;base64,%s' %
-                std.base64(script),
+              contents: {
+                source:
+                  'data:text/plain;charset=utf-8;base64,%s' %
+                  std.base64(script),
+              },
             },
           ],
-          systemd: {
-            units: [
-              {
-                name: 'appuio-create-egress-interfaces.service',
-                enabled: true,
-                contents: |||
-                  [Unit]
-                  Description=Assign egress IPs to node interface
-                  After=NetworkManager-wait-online.service
-                  Before=kubelet-dependencies.target
-                  [Service]
-                  ExecStart=/usr/local/bin/appuio-create-egress-interfaces.sh
-                  Type=oneshot
-                  [Install]
-                  WantedBy=kubelet-dependencies.target
-                |||,
-              },
-            ],
-          },
+        },
+        systemd: {
+          units: [
+            {
+              name: 'appuio-create-egress-interfaces.service',
+              enabled: true,
+              contents: |||
+                [Unit]
+                Description=Assign egress IPs to node interface
+                After=NetworkManager-wait-online.service
+                Before=kubelet-dependencies.target
+                [Service]
+                ExecStart=/usr/local/bin/appuio-create-egress-interfaces.sh
+                Type=oneshot
+                [Install]
+                WantedBy=kubelet-dependencies.target
+              |||,
+            },
+          ],
         },
       },
     },
