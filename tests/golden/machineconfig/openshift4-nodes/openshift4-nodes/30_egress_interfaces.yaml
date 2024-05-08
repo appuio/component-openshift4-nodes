@@ -35,22 +35,25 @@ metadata:
   name: 99x-infra-egress-interfaces
 spec:
   config:
+    ignition:
+      version: 3.4.0
     storage:
       files:
-        - contents: data:text/plain;charset=utf-8;base64,IyEvYmluL2Jhc2gKCnNldCAtZW8gcGlwZWZhaWwKCmV4cG9ydCBLVUJFQ09ORklHPSIvdmFyL2xpYi9rdWJlbGV0L2t1YmVjb25maWciCgpyZWFkb25seSBzaGFkb3dfZGF0YT0kKGt1YmVjdGwgLW4gImNpbGl1bSIgZ2V0IGNvbmZpZ21hcCAiZWlwLXNoYWRvdy1yYW5nZXMiIC1vanNvbnBhdGg9InsuZGF0YS4ke0hPU1ROQU1FfX0iKQoKZm9yIHByZWZpeCBpbiAkKGVjaG8gIiRzaGFkb3dfZGF0YSIgfCBqcSAtciAnLnxrZXlzW10nKTsgZG8KICBiYXNlPSQoZWNobyAiJHNoYWRvd19kYXRhIiB8IGpxIC1yICIuJHtwcmVmaXh9LmJhc2UiKQogIGZyb209JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0uZnJvbSIpCiAgdG89JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0udG8iKQogIGVjaG8gIkNvbmZpZ3VyaW5nIGR1bW15IGludGVyZmFjZXMgZm9yIGVncmVzcyByYW5nZSAke3ByZWZpeH06IGJhc2U9JHtiYXNlfSwgZnJvbT0ke2Zyb219LCB0bz0ke3RvfSIKICBmb3Igc3VmZml4IGluICQoc2VxICIkZnJvbSIgIiR0byIpOyBkbwogICAgaWR4PSQoKCIkc3VmZml4IiAtICIkZnJvbSIpKQogICAgaWZhY2U9IiR7cHJlZml4fV8ke2lkeH0iCiAgICBpcCBsIGRlbCAiJGlmYWNlIiAyPi9kZXYvbnVsbCB8fCB0cnVlCiAgICBpcCBsIGFkZCAiJGlmYWNlIiB0eXBlIGR1bW15CiAgICBpcCBhIGFkZCAiJHtiYXNlfS4ke3N1ZmZpeH0iIGRldiAiJGlmYWNlIgogIGRvbmUKZG9uZQoKZXhpdCAwCg==
+        - contents:
+            source: data:text/plain;charset=utf-8;base64,IyEvYmluL2Jhc2gKCnNldCAtZW8gcGlwZWZhaWwKCmV4cG9ydCBLVUJFQ09ORklHPSIvdmFyL2xpYi9rdWJlbGV0L2t1YmVjb25maWciCgpyZWFkb25seSBzaGFkb3dfZGF0YT0kKGt1YmVjdGwgLW4gImNpbGl1bSIgZ2V0IGNvbmZpZ21hcCAiZWlwLXNoYWRvdy1yYW5nZXMiIC1vanNvbnBhdGg9InsuZGF0YS4ke0hPU1ROQU1FfX0iKQoKZm9yIHByZWZpeCBpbiAkKGVjaG8gIiRzaGFkb3dfZGF0YSIgfCBqcSAtciAnLnxrZXlzW10nKTsgZG8KICBiYXNlPSQoZWNobyAiJHNoYWRvd19kYXRhIiB8IGpxIC1yICIuJHtwcmVmaXh9LmJhc2UiKQogIGZyb209JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0uZnJvbSIpCiAgdG89JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0udG8iKQogIGVjaG8gIkNvbmZpZ3VyaW5nIGR1bW15IGludGVyZmFjZXMgZm9yIGVncmVzcyByYW5nZSAke3ByZWZpeH06IGJhc2U9JHtiYXNlfSwgZnJvbT0ke2Zyb219LCB0bz0ke3RvfSIKICBmb3Igc3VmZml4IGluICQoc2VxICIkZnJvbSIgIiR0byIpOyBkbwogICAgaWR4PSQoKCIkc3VmZml4IiAtICIkZnJvbSIpKQogICAgaWZhY2U9IiR7cHJlZml4fV8ke2lkeH0iCiAgICBpcCBsIGRlbCAiJGlmYWNlIiAyPi9kZXYvbnVsbCB8fCB0cnVlCiAgICBpcCBsIGFkZCAiJGlmYWNlIiB0eXBlIGR1bW15CiAgICBpcCBhIGFkZCAiJHtiYXNlfS4ke3N1ZmZpeH0iIGRldiAiJGlmYWNlIgogIGRvbmUKZG9uZQoKZXhpdCAwCg==
           mode: 493
           path: /usr/local/bin/appuio-create-egress-interfaces.sh
-      systemd:
-        units:
-          - contents: |
-              [Unit]
-              Description=Assign egress IPs to node interface
-              After=NetworkManager-wait-online.service
-              Before=kubelet-dependencies.target
-              [Service]
-              ExecStart=/usr/local/bin/appuio-create-egress-interfaces.sh
-              Type=oneshot
-              [Install]
-              WantedBy=kubelet-dependencies.target
-            enabled: true
-            name: appuio-create-egress-interfaces.service
+    systemd:
+      units:
+        - contents: |
+            [Unit]
+            Description=Assign egress IPs to node interface
+            After=NetworkManager-wait-online.service
+            Before=kubelet-dependencies.target
+            [Service]
+            ExecStart=/usr/local/bin/appuio-create-egress-interfaces.sh
+            Type=oneshot
+            [Install]
+            WantedBy=kubelet-dependencies.target
+          enabled: true
+          name: appuio-create-egress-interfaces.service
