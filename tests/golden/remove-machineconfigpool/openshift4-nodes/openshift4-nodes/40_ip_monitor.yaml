@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/node-selector: ''
+  labels:
+    name: appuio-ip-monitor
+    openshift.io/cluster-monitoring: 'true'
+  name: appuio-ip-monitor
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: ip-monitor
+  name: ip-monitor
+  namespace: appuio-ip-monitor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: ip-monitor-scc-hostnetwork
+  name: ip-monitor-scc-hostnetwork
+  namespace: appuio-ip-monitor
+roleRef:
+  kind: ClusterRole
+  name: system:openshift:scc:hostnetwork-v2
+subjects:
+  - kind: ServiceAccount
+    name: ip-monitor
+    namespace: appuio-ip-monitor
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations: {}
+  labels:
+    name: ip-monitor
+  name: ip-monitor
+  namespace: appuio-ip-monitor
+spec:
+  selector:
+    matchLabels:
+      name: ip-monitor
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        name: ip-monitor
+    spec:
+      containers:
+        - args: []
+          command:
+            - /bin/sh
+            - -c
+            - 'trap : TERM INT; ip -ts monitor address link mroute netconf nexthop
+              nsid prefix route rule & wait'
+          env: []
+          image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+          imagePullPolicy: Always
+          name: ip-monitor
+          ports: []
+          stdin: false
+          tty: false
+          volumeMounts: []
+      hostNetwork: true
+      imagePullSecrets: []
+      initContainers: []
+      priorityClassName: system-node-critical
+      serviceAccountName: ip-monitor
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - operator: Exists
+      volumes: []
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
