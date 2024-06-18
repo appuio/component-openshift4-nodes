@@ -1,0 +1,7 @@
+spec:
+  ignoreDifferences:
+    - jsonPointers:
+        - /spec/state
+      kind: ControlPlaneMachineSet
+      name: cluster
+      namespace: openshift-machine-api
