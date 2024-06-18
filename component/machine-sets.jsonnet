@@ -164,6 +164,7 @@ local machineSpecs = [
 {
   ['machineset-' + m.name]: machineSet(m.name, m.spec)
   for m in machineSpecs
+  if m.spec != null
 } + {
   [if std.length(machineSpecs) == 0 then '.gitkeep']: {},
 }
