@@ -7,11 +7,10 @@ local params = inv.parameters.openshift4_nodes;
 
 local isGCP = inv.parameters.facts.cloud == 'gcp';
 
-local machineSet = function(name, set)
-  local role = if std.objectHas(set, 'role') then set.role else name;
-  kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name)
-  + { spec+: params.defaultSpecs[inv.parameters.facts.cloud] }
-  + {
+local machineSetSpecs = function(name, set, role)
+  kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
+    spec+: params.defaultSpecs[inv.parameters.facts.cloud],
+  } + {
     metadata+: {
       annotations+: com.getValueOrDefault(set, 'annotations', {}),
       labels+: {
@@ -55,8 +54,73 @@ local machineSet = function(name, set)
         },
       },
     },
-  }
-  + if std.objectHas(set, 'spec') then { spec+: com.makeMergeable(set.spec) } else {};
+  };
+
+local cpMachineSetSpecs = function(set)
+  kube._Object('machine.openshift.io/v1', 'ControlPlaneMachineSet', 'cluster') {
+    spec+: {
+      template+: {
+        machines_v1beta1_machine_openshift_io: {
+          spec+: {
+            providerSpec+: {
+              value+: params.defaultSpecs[inv.parameters.facts.cloud].template.spec.providerSpec.value,
+            },
+          },
+        },
+      },
+    },
+  } + {
+    metadata+: {
+      annotations+: std.get(set, 'annotations', {}),
+      namespace: params.machineApiNamespace,
+    },
+    spec+: {
+      replicas: std.get(set, 'replicas', 1),
+      selector+: {
+        matchLabels+: {
+          'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
+          'machine.openshift.io/cluster-api-machine-role': 'master',
+          'machine.openshift.io/cluster-api-machine-type': 'master',
+        },
+      },
+      state: 'Inactive',
+      strategy+: {
+        type: 'OnDelete',
+      },
+      template+: {
+        machineType+: 'machines_v1beta1_machine_openshift_io',
+        machines_v1beta1_machine_openshift_io+: {
+          failureDomains+: {
+            platform: '',
+          },
+          metadata+: {
+            labels+: {
+              'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
+              'machine.openshift.io/cluster-api-machine-role': 'master',
+              'machine.openshift.io/cluster-api-machine-type': 'master',
+            },
+          },
+          spec+: {
+            [if isGCP then 'providerSpec']+: {
+              value+: {
+                machineType: set.instanceType,
+                tags: [
+                  params.infrastructureID + '-master',
+                ],
+                zone: params.availabilityZones[0],
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
+local machineSet = function(name, set)
+  local role = std.get(set, 'role', name);
+  local spec = com.makeMergeable(std.get(set, 'spec', {}));
+  if role == 'master' then cpMachineSetSpecs(set) { spec+: spec }
+  else machineSetSpecs(name, set, role) { spec+: spec };
 
 local isMultiAz = function(name)
   com.getValueOrDefault(params.nodeGroups[name], 'multiAz', false);

@@ -1,0 +1,61 @@
+apiVersion: machine.openshift.io/v1
+kind: ControlPlaneMachineSet
+metadata:
+  annotations: {}
+  labels:
+    name: cluster
+  name: cluster
+  namespace: openshift-machine-api
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: infra-id
+      machine.openshift.io/cluster-api-machine-role: master
+      machine.openshift.io/cluster-api-machine-type: master
+  state: Inactive
+  strategy:
+    type: OnDelete
+  template:
+    machineType: machines_v1beta1_machine_openshift_io
+    machines_v1beta1_machine_openshift_io:
+      failureDomains:
+        platform: ''
+      metadata:
+        labels:
+          machine.openshift.io/cluster-api-cluster: infra-id
+          machine.openshift.io/cluster-api-machine-role: master
+          machine.openshift.io/cluster-api-machine-type: master
+      spec:
+        providerSpec:
+          value:
+            apiVersion: gcpprovider.openshift.io/v1beta1
+            canIPForward: false
+            credentialsSecret:
+              name: gcp-cloud-credentials
+            deletionProtection: false
+            disks:
+              - autoDelete: true
+                boot: true
+                image: infra-id-rhcos-image
+                labels: null
+                sizeGb: 128
+                type: pd-ssd
+            kind: GCPMachineProviderSpec
+            machineType: super-trooper
+            metadata:
+              creationTimestamp: null
+            networkInterfaces:
+              - network: infra-id-network
+                subnetwork: infra-id-worker-subnet
+            projectID: cluster-test
+            region: rma1
+            serviceAccounts:
+              - email: infra-id-w@cluster-test.iam.gserviceaccount.com
+                scopes:
+                  - https://www.googleapis.com/auth/cloud-platform
+            tags:
+              - infra-id-master
+            userDataSecret:
+              name: worker-user-data
+            zone: europe-west6-a
