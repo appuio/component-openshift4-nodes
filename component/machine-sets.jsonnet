@@ -71,11 +71,11 @@ local cpMachineSetSpecs = function(set)
     },
   } + {
     metadata+: {
-      annotations+: com.getValueOrDefault(set, 'annotations', {}),
+      annotations+: std.get(set, 'annotations', {}),
       namespace: params.machineApiNamespace,
     },
     spec+: {
-      replicas: com.getValueOrDefault(set, 'replicas', 1),
+      replicas: std.get(set, 'replicas', 1),
       selector+: {
         matchLabels+: {
           'machine.openshift.io/cluster-api-cluster': params.infrastructureID,
@@ -83,7 +83,7 @@ local cpMachineSetSpecs = function(set)
           'machine.openshift.io/cluster-api-machine-type': 'master',
         },
       },
-      state+: 'Inactive',
+      state: 'Inactive',
       strategy+: {
         type: 'OnDelete',
       },
@@ -101,8 +101,6 @@ local cpMachineSetSpecs = function(set)
             },
           },
           spec+: {
-            lifecycleHooks+: {},
-            metadata+: {},
             [if isGCP then 'providerSpec']+: {
               value+: {
                 machineType: set.instanceType,
@@ -119,8 +117,8 @@ local cpMachineSetSpecs = function(set)
   };
 
 local machineSet = function(name, set)
-  local role = if std.objectHas(set, 'role') then set.role else name;
-  local spec = if std.objectHas(set, 'spec') then com.makeMergeable(set.spec) else {};
+  local role = std.get(set, 'role', name);
+  local spec = com.makeMergeable(std.get(set, 'spec', {}));
   if role == 'master' then cpMachineSetSpecs(set) { spec+: spec }
   else machineSetSpecs(name, set, role) { spec+: spec };
 
