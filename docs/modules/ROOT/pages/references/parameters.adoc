@@ -94,10 +94,13 @@ type:: dictionary
 default:: empty
 
 A dictionary of node groups to create on the cluster.
-It's centered around the MachineSet CRD but also takes care of some additional aspects like zone distribution and auto scaling.
+It's centered around the `MachineSet` CRD but also takes care of some additional aspects like zone distribution and auto scaling.
 
 The top level key is the name of each set of machines.
 Each set of machines has the values described below.
+
+If an entry has value `null`, no `MachineSet` is created for that entry.
+This allows users to remove entries in the hierarchy.
 
 === `annotations`
 
@@ -162,7 +165,9 @@ default:: worker
 
 The role of the created Nodes.
 The value will be added as the `node-role.kubernetes.io/<role>: ""` label to nodes.
-The `worker` role label will always be added to inherit the base configuration for nodes.
+Unless `role` is set to `master`, the `worker` role label will always be added to inherit the base configuration for nodes.
+
+When `role` is set to `master`, the component will create a `ControlPlaneMachineSet` instead of a `MachineSet`.
 
 [NOTE]
 ====
@@ -175,7 +180,7 @@ In order to add additional labels to the resulting Node object, use `spec.templa
 type:: dictionary
 default:: See <<defaultSpec>>.
 
-This gives you the full control over the resulting MachineSet.
+This gives you the full control over the resulting `MachineSet` or `ControlPlaneMachineSet`.
 Values given here will be merged with precedence with the defaults configured in <<defaultSpec>>.
 The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
 
