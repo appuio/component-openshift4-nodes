@@ -43,7 +43,7 @@ parameters:
                 tags: []
                 userDataSecret:
                   name: worker-user-data
-    cpDefaultSpecs:
+    controlPlaneDefaultSpecs:
       vsphere: {}
       aws: {}
       azure: {}
