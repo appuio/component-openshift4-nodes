@@ -4,6 +4,7 @@ parameters:
     projectName: none
     infrastructureID: none
     defaultSpecs:
+      vsphere: {}
       aws: {}
       azure: {}
       gcp:
@@ -42,6 +43,42 @@ parameters:
                 tags: []
                 userDataSecret:
                   name: worker-user-data
+    cpDefaultSpecs:
+      vsphere: {}
+      aws: {}
+      azure: {}
+      gcp:
+        template:
+          machines_v1beta1_machine_openshift_io:
+            spec:
+              providerSpec:
+                value:
+                  apiVersion: gcpprovider.openshift.io/v1beta1
+                  canIPForward: false
+                  credentialsSecret:
+                    name: gcp-cloud-credentials
+                  deletionProtection: false
+                  disks:
+                    - autoDelete: true
+                      boot: true
+                      image: ${openshift4_nodes:infrastructureID}-rhcos-image
+                      labels: null
+                      sizeGb: 128
+                      type: pd-ssd
+                  kind: GCPMachineProviderSpec
+                  metadata:
+                    creationTimestamp: null
+                  networkInterfaces:
+                    - network: ${openshift4_nodes:infrastructureID}-network
+                      subnetwork: ${openshift4_nodes:infrastructureID}-worker-subnet
+                  projectID: ${openshift4_nodes:projectName}
+                  region: ${facts:region}
+                  serviceAccounts:
+                    - email: ${openshift4_nodes:infrastructureID}-w@${openshift4_nodes:projectName}.iam.gserviceaccount.com
+                      scopes:
+                        - https://www.googleapis.com/auth/cloud-platform
+                  userDataSecret:
+                    name: master-user-data
     nodeConfig:
       cgroupMode: v1
 

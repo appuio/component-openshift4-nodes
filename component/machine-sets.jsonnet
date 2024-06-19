@@ -58,17 +58,7 @@ local machineSetSpecs = function(name, set, role)
 
 local cpMachineSetSpecs = function(set)
   kube._Object('machine.openshift.io/v1', 'ControlPlaneMachineSet', 'cluster') {
-    spec+: {
-      template+: {
-        machines_v1beta1_machine_openshift_io: {
-          spec+: {
-            providerSpec+: {
-              value+: params.defaultSpecs[inv.parameters.facts.cloud].template.spec.providerSpec.value,
-            },
-          },
-        },
-      },
-    },
+    spec+: params.cpDefaultSpecs[inv.parameters.facts.cloud],
   } + {
     metadata+: {
       annotations+: std.get(set, 'annotations', {}),
