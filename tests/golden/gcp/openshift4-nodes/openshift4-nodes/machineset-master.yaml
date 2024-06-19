@@ -57,5 +57,5 @@ spec:
             tags:
               - infra-id-master
             userDataSecret:
-              name: worker-user-data
+              name: master-user-data
             zone: europe-west6-a

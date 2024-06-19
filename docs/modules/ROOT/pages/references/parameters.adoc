@@ -39,6 +39,17 @@ A dictionary holding the default values applied to each `machinesets.machine.ope
 The top level keys are the names of cloud providers as reported by the cluster fact `${facts:cloud}`.
 The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
 
+== `controlPlaneDefaultSpecs`
+
+[horizontal]
+type:: dictionary
+default:: Sensible defaults for a growing number of cloud providers.
+
+A dictionary holding the default values applied to each `controlplanemachinesets.machine.openshift.io` object created by this component.
+
+The top level keys are the names of cloud providers as reported by the cluster fact `${facts:cloud}`.
+The values can be everything that's accepted in the `spec` field of a `controlplanemachinesets.machine.openshift.io` object.
+
 == `infrastructureID`
 
 [horizontal]
