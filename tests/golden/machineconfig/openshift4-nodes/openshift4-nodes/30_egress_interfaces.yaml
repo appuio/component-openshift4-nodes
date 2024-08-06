@@ -7,9 +7,18 @@ metadata:
 
       set -eo pipefail
 
-      export KUBECONFIG="/var/lib/kubelet/kubeconfig"
+      readonly patched_kubeconfig="/tmp/kubeconfig"
 
-      readonly shadow_data=$(kubectl -n "cilium" get configmap "eip-shadow-ranges" -ojsonpath="{.data.${HOSTNAME}}")
+      # Patch node kubeconfig to use api.<cluster-domain> instead of
+      # `api-int.<cluster-domain>` so that the script works on clusters which
+      # provide the api-int record via in-cluster CoreDNS. This assumes that the
+      # public API endpoint has a certificate that's issued by a public CA that's
+      # part of the node's trusted CA certs.
+      sed -e 's/api-int/api/;/certificate-authority-data/d' "/var/lib/kubelet/kubeconfig" > "$patched_kubeconfig"
+      export KUBECONFIG="${patched_kubeconfig}"
+
+      shadow_data=$(kubectl -n "cilium" get configmap "eip-shadow-ranges" -ojsonpath="{.data.${HOSTNAME}}")
+      readonly shadow_data
 
       for prefix in $(echo "$shadow_data" | jq -r '.|keys[]'); do
         base=$(echo "$shadow_data" | jq -r ".${prefix}.base")
@@ -24,6 +33,8 @@ metadata:
           ip a add "${base}.${suffix}" dev "$iface"
         done
       done
+
+      rm "${patched_kubeconfig}"
 
       exit 0
   labels:
@@ -40,7 +51,7 @@ spec:
     storage:
       files:
         - contents:
-            source: data:text/plain;charset=utf-8;base64,IyEvYmluL2Jhc2gKCnNldCAtZW8gcGlwZWZhaWwKCmV4cG9ydCBLVUJFQ09ORklHPSIvdmFyL2xpYi9rdWJlbGV0L2t1YmVjb25maWciCgpyZWFkb25seSBzaGFkb3dfZGF0YT0kKGt1YmVjdGwgLW4gImNpbGl1bSIgZ2V0IGNvbmZpZ21hcCAiZWlwLXNoYWRvdy1yYW5nZXMiIC1vanNvbnBhdGg9InsuZGF0YS4ke0hPU1ROQU1FfX0iKQoKZm9yIHByZWZpeCBpbiAkKGVjaG8gIiRzaGFkb3dfZGF0YSIgfCBqcSAtciAnLnxrZXlzW10nKTsgZG8KICBiYXNlPSQoZWNobyAiJHNoYWRvd19kYXRhIiB8IGpxIC1yICIuJHtwcmVmaXh9LmJhc2UiKQogIGZyb209JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0uZnJvbSIpCiAgdG89JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0udG8iKQogIGVjaG8gIkNvbmZpZ3VyaW5nIGR1bW15IGludGVyZmFjZXMgZm9yIGVncmVzcyByYW5nZSAke3ByZWZpeH06IGJhc2U9JHtiYXNlfSwgZnJvbT0ke2Zyb219LCB0bz0ke3RvfSIKICBmb3Igc3VmZml4IGluICQoc2VxICIkZnJvbSIgIiR0byIpOyBkbwogICAgaWR4PSQoKCIkc3VmZml4IiAtICIkZnJvbSIpKQogICAgaWZhY2U9IiR7cHJlZml4fV8ke2lkeH0iCiAgICBpcCBsIGRlbCAiJGlmYWNlIiAyPi9kZXYvbnVsbCB8fCB0cnVlCiAgICBpcCBsIGFkZCAiJGlmYWNlIiB0eXBlIGR1bW15CiAgICBpcCBhIGFkZCAiJHtiYXNlfS4ke3N1ZmZpeH0iIGRldiAiJGlmYWNlIgogIGRvbmUKZG9uZQoKZXhpdCAwCg==
+            source: data:text/plain;charset=utf-8;base64,IyEvYmluL2Jhc2gKCnNldCAtZW8gcGlwZWZhaWwKCnJlYWRvbmx5IHBhdGNoZWRfa3ViZWNvbmZpZz0iL3RtcC9rdWJlY29uZmlnIgoKIyBQYXRjaCBub2RlIGt1YmVjb25maWcgdG8gdXNlIGFwaS48Y2x1c3Rlci1kb21haW4+IGluc3RlYWQgb2YKIyBgYXBpLWludC48Y2x1c3Rlci1kb21haW4+YCBzbyB0aGF0IHRoZSBzY3JpcHQgd29ya3Mgb24gY2x1c3RlcnMgd2hpY2gKIyBwcm92aWRlIHRoZSBhcGktaW50IHJlY29yZCB2aWEgaW4tY2x1c3RlciBDb3JlRE5TLiBUaGlzIGFzc3VtZXMgdGhhdCB0aGUKIyBwdWJsaWMgQVBJIGVuZHBvaW50IGhhcyBhIGNlcnRpZmljYXRlIHRoYXQncyBpc3N1ZWQgYnkgYSBwdWJsaWMgQ0EgdGhhdCdzCiMgcGFydCBvZiB0aGUgbm9kZSdzIHRydXN0ZWQgQ0EgY2VydHMuCnNlZCAtZSAncy9hcGktaW50L2FwaS87L2NlcnRpZmljYXRlLWF1dGhvcml0eS1kYXRhL2QnICIvdmFyL2xpYi9rdWJlbGV0L2t1YmVjb25maWciID4gIiRwYXRjaGVkX2t1YmVjb25maWciCmV4cG9ydCBLVUJFQ09ORklHPSIke3BhdGNoZWRfa3ViZWNvbmZpZ30iCgpzaGFkb3dfZGF0YT0kKGt1YmVjdGwgLW4gImNpbGl1bSIgZ2V0IGNvbmZpZ21hcCAiZWlwLXNoYWRvdy1yYW5nZXMiIC1vanNvbnBhdGg9InsuZGF0YS4ke0hPU1ROQU1FfX0iKQpyZWFkb25seSBzaGFkb3dfZGF0YQoKZm9yIHByZWZpeCBpbiAkKGVjaG8gIiRzaGFkb3dfZGF0YSIgfCBqcSAtciAnLnxrZXlzW10nKTsgZG8KICBiYXNlPSQoZWNobyAiJHNoYWRvd19kYXRhIiB8IGpxIC1yICIuJHtwcmVmaXh9LmJhc2UiKQogIGZyb209JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0uZnJvbSIpCiAgdG89JChlY2hvICIkc2hhZG93X2RhdGEiIHwganEgLXIgIi4ke3ByZWZpeH0udG8iKQogIGVjaG8gIkNvbmZpZ3VyaW5nIGR1bW15IGludGVyZmFjZXMgZm9yIGVncmVzcyByYW5nZSAke3ByZWZpeH06IGJhc2U9JHtiYXNlfSwgZnJvbT0ke2Zyb219LCB0bz0ke3RvfSIKICBmb3Igc3VmZml4IGluICQoc2VxICIkZnJvbSIgIiR0byIpOyBkbwogICAgaWR4PSQoKCIkc3VmZml4IiAtICIkZnJvbSIpKQogICAgaWZhY2U9IiR7cHJlZml4fV8ke2lkeH0iCiAgICBpcCBsIGRlbCAiJGlmYWNlIiAyPi9kZXYvbnVsbCB8fCB0cnVlCiAgICBpcCBsIGFkZCAiJGlmYWNlIiB0eXBlIGR1bW15CiAgICBpcCBhIGFkZCAiJHtiYXNlfS4ke3N1ZmZpeH0iIGRldiAiJGlmYWNlIgogIGRvbmUKZG9uZQoKcm0gIiR7cGF0Y2hlZF9rdWJlY29uZmlnfSIKCmV4aXQgMAo=
           mode: 493
           path: /usr/local/bin/appuio-create-egress-interfaces.sh
     systemd:
