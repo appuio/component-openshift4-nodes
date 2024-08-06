@@ -470,6 +470,16 @@ The script uses the file indicated in field `nodeKubeconfig` to fetch the Config
 If the default value is used, the script will use the node's Kubelet kubeconfig to access the cluster.
 To ensure the Kubelet can access the configmap, users should ensure that a pod which mounts the ConfigMap is running on the node.
 
+[NOTE]
+====
+The script will apply the following changes to the provided kubeconfig:
+
+* Occurrences of `api-int` will be replaced with `api` (once per line)
+* Lines containing the string `certificate-authority-data` will be deleted
+
+This is done to ensure that the script works correctly on IPI clusters which only provide the `api-int` DNS record via the in-cluster CoreDNS which isn't running before the kubelet is started.
+====
+
 [TIP]
 ====
 Component cilium can deploy a suitable ConfigMap and DaemonSets which ensure that the Kubelets on all nodes that need to create egress dummy interfaces can access the ConfigMap.
