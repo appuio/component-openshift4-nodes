@@ -2,9 +2,18 @@
 
 set -eo pipefail
 
-export KUBECONFIG="%(kubelet_kubeconfig)s"
+readonly patched_kubeconfig="/tmp/kubeconfig"
 
-readonly shadow_data=$(kubectl -n "%(cm_namespace)s" get configmap "%(cm_name)s" -ojsonpath="{.data.${HOSTNAME}}")
+# Patch node kubeconfig to use api.<cluster-domain> instead of
+# `api-int.<cluster-domain>` so that the script works on clusters which
+# provide the api-int record via in-cluster CoreDNS. This assumes that the
+# public API endpoint has a certificate that's issued by a public CA that's
+# part of the node's trusted CA certs.
+sed -e 's/api-int/api/;/certificate-authority-data/d' "%(kubelet_kubeconfig)s" > "$patched_kubeconfig"
+export KUBECONFIG="${patched_kubeconfig}"
+
+shadow_data=$(kubectl -n "%(cm_namespace)s" get configmap "%(cm_name)s" -ojsonpath="{.data.${HOSTNAME}}")
+readonly shadow_data
 
 for prefix in $(echo "$shadow_data" | jq -r '.|keys[]'); do
   base=$(echo "$shadow_data" | jq -r ".${prefix}.base")
@@ -19,5 +28,7 @@ for prefix in $(echo "$shadow_data" | jq -r '.|keys[]'); do
     ip a add "${base}.${suffix}" dev "$iface"
   done
 done
+
+rm "${patched_kubeconfig}"
 
 exit 0
