@@ -150,11 +150,18 @@ local machineSpecs = [
   if isGCP && isMultiAz(name)
 ]);
 
+local additionalMachineSets = com.generateResources(params.machineSets, function(name) kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
+  metadata+: {
+    namespace: params.machineApiNamespace,
+  },
+});
 
 {
   ['machineset-' + m.name]: machineSet(m.name, m.spec)
   for m in machineSpecs
   if m.spec != null
 } + {
-  [if std.length(machineSpecs) == 0 then '.gitkeep']: {},
+  [if std.length(machineSpecs) == 0 && std.length(additionalMachineSets) == 0 then '.gitkeep']: {},
+} + {
+  [if std.length(additionalMachineSets) > 0 then 'additional_machine_sets']: additionalMachineSets,
 }
