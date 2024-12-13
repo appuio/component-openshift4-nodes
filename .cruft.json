@@ -1,13 +1,13 @@
 {
   "template": "https://github.com/projectsyn/commodore-component-template.git",
-  "commit": "8840f87d25d97ce0d4bfed75d40173caaf4100fc",
+  "commit": "a0ae007e2702ad346c25755b0ef91ec5e40ccf50",
   "checkout": "main",
   "context": {
     "cookiecutter": {
       "name": "OpenShift 4 Nodes",
       "slug": "openshift4-nodes",
       "parameter_key": "openshift4_nodes",
-      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool",
+      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling",
       "add_lib": "n",
       "add_pp": "n",
       "add_golden": "y",
