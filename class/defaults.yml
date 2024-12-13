@@ -86,6 +86,12 @@ parameters:
 
     machineSets: {}
 
+    autoscaling:
+      enabled: false
+      clusterAutoscaler: {}
+      machineAutoscalers: {}
+      priorityExpanderConfig: {}
+
     machineConfigPools:
       infra: {}
       app: {}
