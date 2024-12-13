@@ -1,0 +1,44 @@
+parameters:
+  openshift4_nodes:
+    autoscaling:
+      enabled: true
+      machineAutoscalers:
+        app:
+          minReplicas: 3
+          maxReplicas: 6
+
+    machineSets:
+      app:
+        spec:
+          deletePolicy: Oldest
+          replicas: 0
+          selector:
+            matchLabels:
+              machine.openshift.io/cluster-api-machineset: app
+          template:
+            metadata:
+              labels:
+                machine.openshift.io/cluster-api-machine-role: app
+                machine.openshift.io/cluster-api-machine-type: app
+                machine.openshift.io/cluster-api-machineset: app
+            spec:
+              lifecycleHooks: {}
+              metadata:
+                labels:
+                  node-role.kubernetes.io/app: ""
+                  node-role.kubernetes.io/worker: ""
+              providerSpec:
+                value:
+                  antiAffinityKey: app
+                  baseDomain: lab-cloudscale-rma-0.appuio.cloud
+                  flavor: flex-16-4
+                  image: custom:rhcos-4.15
+                  interfaces:
+                    - networkUUID: fd2b132d-f5d0-4024-b99f-68e5321ab4d1
+                      type: Private
+                  rootVolumeSizeGB: 100
+                  tokenSecret:
+                    name: cloudscale-rw-token
+                  userDataSecret:
+                    name: cloudscale-user-data
+                  zone: rma1
