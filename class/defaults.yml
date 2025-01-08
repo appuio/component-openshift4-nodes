@@ -1,5 +1,7 @@
 parameters:
   openshift4_nodes:
+    =_metadata:
+      multi_tenant: true
     machineApiNamespace: openshift-machine-api
     projectName: none
     infrastructureID: none
