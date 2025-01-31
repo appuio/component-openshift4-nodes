@@ -1,0 +1,10 @@
+spec:
+  ignoreDifferences:
+    - group: machine.openshift.io
+      jsonPointers:
+        - /spec/replicas
+      kind: MachineSet
+      name: app
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true

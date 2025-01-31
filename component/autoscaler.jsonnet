@@ -110,24 +110,42 @@ local machineAutoscaler(machineSet) =
           },
     };
 
-if params.autoscaling.enabled then
-  local machineAutoscalers = if
-    std.length(params.autoscaling.machineAutoscalers) == 0 then
-    std.trace(
-      "WARNING: Enabling autoscaling without any MachineAutoscalers won't scale the cluster",
-      params.autoscaling.machineAutoscalers
-    )
-  else
-    params.autoscaling.machineAutoscalers;
+local machineAutoscalers = com.generateResources(
+  params.autoscaling.machineAutoscalers,
+  function(machineset) machineAutoscaler(machineset) {
+    // hide input fields that aren't suitable for the output
+    minReplicas:: 0,
+    maxReplicas:: 0,
+  }
+);
 
+local ignoreDifferences = [
   {
-    cluster_autoscaler: clusterAutoscaler,
+    group: 'machine.openshift.io',
+    kind: 'MachineSet',
+    name: ma.spec.scaleTargetRef.name,
+    jsonPointers: [ '/spec/replicas' ],
+  }
+  for ma in machineAutoscalers
+];
+
+if params.autoscaling.enabled then
+  {
+    cluster_autoscaler:
+      if
+        std.length(params.autoscaling.machineAutoscalers) == 0 then
+        std.trace(
+          "WARNING: Enabling autoscaling without any MachineAutoscalers won't scale the cluster",
+          clusterAutoscaler
+        )
+      else
+        clusterAutoscaler,
     [if std.length(machineAutoscalers) > 0 then
-      'machine_autoscalers']: [
-      machineAutoscaler(m)
-      for m in std.objectFields(machineAutoscalers)
-    ],
+      'machine_autoscalers']: machineAutoscalers,
     [if priorityExpanderConfigmap != null then
       'priority_expander_configmap']: priorityExpanderConfigmap,
+    ignoreDifferences:: ignoreDifferences,
   }
-else {}
+else {
+  ignoreDifferences:: [],
+}
