@@ -318,6 +318,8 @@ Each key value pair in this parameter is used to create a `MachineAutoscaler` re
 The component expects that each key matches a `MachineSet` which is configured through one of the parameters `nodeGroups` or `machineSets`.
 The component will raise an error if it finds a key which doesn't have a matching entry in `nodeGroups` or `machineSets`.
 
+NOTE: The component will configure ArgoCD to ignore changes to `spec.replicas` for each `MachineSet` resources targeted by a `MachineAutoscaler`.
+
 The value associated with each key is used as the base configuration for `.spec` of the resulting `MachineAutoscaler` resource.
 The component will always configure `.spec.scaleTargetRef.name` with the key to ensure the `MachineAutoscaler` resource targets the desired `MachineSet`.
 

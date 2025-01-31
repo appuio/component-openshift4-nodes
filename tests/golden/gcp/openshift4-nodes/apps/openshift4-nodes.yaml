@@ -1,0 +1,5 @@
+spec:
+  ignoreDifferences: []
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
