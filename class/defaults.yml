@@ -119,3 +119,9 @@ parameters:
       shadowRangeConfigMap:
         namespace: cilium
         name: eip-shadow-ranges
+
+    images:
+      oc:
+        registry: quay.io
+        repository: appuio/oc
+        tag: v4.16
