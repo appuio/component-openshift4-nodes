@@ -16,5 +16,6 @@ parameters:
           - openshift4-nodes/component/aggregated-clusterroles.jsonnet
           - openshift4-nodes/component/egress-interfaces.jsonnet
           - openshift4-nodes/component/autoscaler.jsonnet
+          - openshift4-nodes/component/prune-machine-configs.jsonnet
         input_type: jsonnet
         output_path: openshift4-nodes/
