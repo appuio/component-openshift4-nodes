@@ -1,4 +1,12 @@
 parameters:
+  kapitan:
+    dependencies:
+      - type: https
+        source: https://raw.githubusercontent.com/appuio/component-openshift4-monitoring/v6.8.0/lib/openshift4-monitoring-prom.libsonnet
+        output_path: vendor/lib/prom.libsonnet
+  openshift4_monitoring:
+    namespace: foo
+
   openshift4_nodes:
     autoscaling:
       enabled: true
