@@ -339,6 +339,22 @@ When the parameter has any fields set, the component will default parameter `.sp
 
 The component will render the provided dictionary as YAML and write it to `data.priorities` in the `cluster-autoscaler-priority-expander` configmap.
 
+=== `autoscaling.metrics.enabled`
+[horizontal]
+type:: boolean
+default:: `false`
+
+When enabled, create PrometheusRules to generate metrics for certain autoscaling parameters:
+`component_openshift4_nodes_machineset_replicas_max` contains the `maxReplicas` value for each machine set.
+`component_openshift4_nodes_machineset_replicas_min` contains the `minReplicas` value for each machine set.
+
+=== `autoscaling.metrics.extraLabels`
+[horizontal]
+type:: dictionary
+default:: `{}`
+
+Additional label-value pairs to add to the autoscaling metrics.
+
 === Example configuration
 
 This configuration assumes that a `MachineSet` named `app` is configured through either `nodePools` or `machineSets`.

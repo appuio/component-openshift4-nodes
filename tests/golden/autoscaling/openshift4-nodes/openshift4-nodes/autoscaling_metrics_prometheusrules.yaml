@@ -12,9 +12,11 @@ spec:
       rules:
         - expr: vector(3)
           labels:
+            foo: bar
             machineset: app
           record: component_openshift4_nodes_machineset_replicas_min
         - expr: vector(6)
           labels:
+            foo: bar
             machineset: app
           record: component_openshift4_nodes_machineset_replicas_max

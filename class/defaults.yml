@@ -94,7 +94,7 @@ parameters:
       machineAutoscalers: {}
       priorityExpanderConfig: {}
       metrics:
-        enabled: true
+        enabled: false
         extraLabels: {}
 
     machineConfigPools:
