@@ -54,3 +54,8 @@ parameters:
                   userDataSecret:
                     name: cloudscale-user-data
                   zone: rma1
+    capacityAlerts:
+      enabled: true
+      monitorMachineSets:
+      - app
+      - ~worker

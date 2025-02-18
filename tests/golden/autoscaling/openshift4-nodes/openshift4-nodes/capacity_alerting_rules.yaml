@@ -1,0 +1,187 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  annotations:
+    syn_component: openshift4-nodes
+  labels:
+    name: openshift4-nodes-capacity
+  name: openshift4-nodes-capacity
+  namespace: foo
+spec:
+  groups:
+    - name: syn-CpuCapacity
+      rules:
+        - alert: SYN_ClusterCpuUsageHigh
+          annotations:
+            description: The cluster is close to using up all CPU resources. The cluster
+              might not be able to handle node failures or load spikes. Consider adding
+              new nodes.
+            message: Only {{ $value }} idle cpu cores accross cluster.
+            runbook_url: https://hub.syn.tools/openshift4-monitoring/runbooks/cpucapacity.html#SYN_ClusterCpuUsageHigh
+            syn_component: openshift4-nodes
+          expr: sum by (machineset) (label_replace(rate(node_cpu_seconds_total{mode="idle"}[15m]),
+            "node", "$1", "instance", "(.+)") * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) + on(machineset) (max by(machineset)
+            (component_openshift4_monitoring_machineset_replicas_max or on(machineset)
+            label_replace(mapi_machine_set_status_replicas_available, "machineset",
+            "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available,
+            "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset)
+            (kube_node_status_capacity{resource="cpu"} * on(node) group_left(machineset)
+            label_replace(openshift_upgrade_controller_machine_info, "node", "$1",
+            "node_ref", "(.+)")) < 1.000000 * max by (machineset) (kube_node_status_capacity{resource="cpu"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info,
+            "node", "$1", "node_ref", "(.+)"))
+          for: 30m
+          labels:
+            severity: warning
+            syn: 'true'
+            syn_component: openshift4-monitoring
+    - name: syn-MemoryCapacity
+      rules:
+        - alert: SYN_ClusterLowOnMemory
+          annotations:
+            description: The cluster is close to using all of its memory. The cluster
+              might not be able to handle node failures or load spikes. Consider adding
+              new nodes.
+            message: Only {{ $value }} free memory on Worker Nodes.
+            runbook_url: https://hub.syn.tools/openshift4-monitoring/runbooks/memorycapacity.html#SYN_ClusterMemoryUsageHigh
+            syn_component: openshift4-nodes
+          expr: sum by (machineset) (label_replace(node_memory_MemAvailable_bytes,
+            "node", "$1", "instance", "(.+)") * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) + on(machineset) (max by(machineset)
+            (component_openshift4_monitoring_machineset_replicas_max or on(machineset)
+            label_replace(mapi_machine_set_status_replicas_available, "machineset",
+            "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available,
+            "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset)
+            (kube_node_status_capacity{resource="memory"} * on(node) group_left(machineset)
+            label_replace(openshift_upgrade_controller_machine_info, "node", "$1",
+            "node_ref", "(.+)")) < 1.000000 * max by (machineset) (kube_node_status_capacity{resource="memory"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info,
+            "node", "$1", "node_ref", "(.+)"))
+          for: 30m
+          labels:
+            severity: warning
+            syn: 'true'
+            syn_component: openshift4-monitoring
+    - name: syn-PodCapacity
+      rules:
+        - alert: SYN_TooManyPods
+          annotations:
+            description: The cluster is close to the limit of running pods. The cluster
+              might not be able to handle node failures and might not be able to start
+              new pods. Consider adding new nodes.
+            message: Only {{ $value }} more pods can be started.
+            runbook_url: https://hub.syn.tools/openshift4-monitoring/runbooks/podcapacity.html#SYN_TooManyPods
+            syn_component: openshift4-nodes
+          expr: sum by (machineset) (kube_node_status_capacity{resource="pods"} *
+            on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) + on(machineset) (max by(machineset)
+            (component_openshift4_monitoring_machineset_replicas_max or on(machineset)
+            label_replace(mapi_machine_set_status_replicas_available, "machineset",
+            "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available,
+            "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset)
+            (kube_node_status_capacity{resource="pods"} * on(node) group_left(machineset)
+            label_replace(openshift_upgrade_controller_machine_info, "node", "$1",
+            "node_ref", "(.+)")) - sum by (machineset) (kubelet_running_pods * on(node)
+            group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) < 1.000000 * max by (machineset) (kube_node_status_capacity{resource="pods"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info,
+            "node", "$1", "node_ref", "(.+)"))
+          for: 30m
+          labels:
+            severity: warning
+            syn: 'true'
+            syn_component: openshift4-monitoring
+    - name: syn-ResourceRequests
+      rules:
+        - alert: SYN_TooMuchCPURequested
+          annotations:
+            description: The cluster is close to assigning all CPU resources to running
+              pods. The cluster might not be able to handle node failures and might
+              soon not be able to start new pods. Consider adding new nodes.
+            message: Only {{ $value }} cpu cores left for new pods.
+            runbook_url: https://hub.syn.tools/openshift4-monitoring/runbooks/resourcerequests.html#SYN_TooMuchCPURequested
+            syn_component: openshift4-nodes
+          expr: sum by (machineset) (kube_node_status_allocatable{resource="cpu"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) + on(machineset) (max by(machineset)
+            (component_openshift4_monitoring_machineset_replicas_max or on(machineset)
+            label_replace(mapi_machine_set_status_replicas_available, "machineset",
+            "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available,
+            "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset)
+            (kube_node_status_allocatable{resource="cpu"} * on(node) group_left(machineset)
+            label_replace(openshift_upgrade_controller_machine_info, "node", "$1",
+            "node_ref", "(.+)")) - sum by (machineset) (kube_pod_resource_request{resource="cpu"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) < 1.000000 * max by (machineset) (kube_node_status_allocatable{resource="cpu"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info,
+            "node", "$1", "node_ref", "(.+)"))
+          for: 30m
+          labels:
+            severity: warning
+            syn: 'true'
+            syn_component: openshift4-monitoring
+        - alert: SYN_TooMuchMemoryRequested
+          annotations:
+            description: The cluster is close to assigning all memory to running pods.
+              The cluster might not be able to handle node failures and might not
+              be able to start new pods. Consider adding new nodes.
+            message: Only {{ $value }} memory left for new pods.
+            runbook_url: https://hub.syn.tools/openshift4-monitoring/runbooks/resourcerequests.html#SYN_TooMuchMemoryRequested
+            syn_component: openshift4-nodes
+          expr: sum by (machineset) (kube_node_status_allocatable{resource="memory"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) + on(machineset) (max by(machineset)
+            (component_openshift4_monitoring_machineset_replicas_max or on(machineset)
+            label_replace(mapi_machine_set_status_replicas_available, "machineset",
+            "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available,
+            "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset)
+            (kube_node_status_allocatable{resource="memory"} * on(node) group_left(machineset)
+            label_replace(openshift_upgrade_controller_machine_info, "node", "$1",
+            "node_ref", "(.+)")) - sum by (machineset) (kube_pod_resource_request{resource="memory"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"},
+            "node", "$1", "node_ref", "(.+)")) < 1.000000 * max by (machineset) (kube_node_status_allocatable{resource="memory"}
+            * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info,
+            "node", "$1", "node_ref", "(.+)"))
+          for: 30m
+          labels:
+            severity: warning
+            syn: 'true'
+            syn_component: openshift4-monitoring
+    - name: syn-UnusedCapacity
+      rules:
+        - alert: SYN_ClusterHasUnusedNodes
+          annotations:
+            description: The cluster has {{ $value }} unused nodes. Consider removing
+              unused nodes.
+            message: Cluster has unused nodes.
+            runbook_url: https://hub.syn.tools/openshift4-monitoring/runbooks/unusedcapacity.html#SYN_ClusterHasUnusedNodes
+            syn_component: openshift4-nodes
+          expr: |-
+            min by (machineset) ((
+              label_replace(
+                (sum by (machineset) (kube_node_status_capacity{resource="pods"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)")) + on(machineset) (min by(machineset) (component_openshift4_monitoring_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset) (kube_node_status_capacity{resource="pods"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")) - sum by (machineset) (kubelet_running_pods * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)"))) / max by (machineset) (kube_node_status_capacity{resource="pods"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)"))
+              , "resource", "pods", "", "")
+            ) or (
+              label_replace(
+                (sum by (machineset) (kube_node_status_allocatable{resource="memory"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)")) + on(machineset) (min by(machineset) (component_openshift4_monitoring_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset) (kube_node_status_allocatable{resource="memory"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")) - sum by (machineset) (kube_pod_resource_request{resource="memory"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)"))) / max by (machineset) (kube_node_status_allocatable{resource="memory"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)"))
+              , "resource", "requested_memory", "", "")
+            ) or (
+              label_replace(
+                (sum by (machineset) (kube_node_status_allocatable{resource="cpu"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)")) + on(machineset) (min by(machineset) (component_openshift4_monitoring_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset) (kube_node_status_allocatable{resource="cpu"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")) - sum by (machineset) (kube_pod_resource_request{resource="cpu"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)"))) / max by (machineset) (kube_node_status_allocatable{resource="cpu"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)"))
+              , "resource", "requested_cpu", "", "")
+            ) or (
+              label_replace(
+                sum by (machineset) (label_replace(node_memory_MemAvailable_bytes, "node", "$1", "instance", "(.+)") * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)")) + on(machineset) (min by(machineset) (component_openshift4_monitoring_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset) (kube_node_status_capacity{resource="memory"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")) / max by (machineset) (kube_node_status_capacity{resource="memory"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)"))
+              , "resource", "memory", "", "")
+            ) or (
+              label_replace(
+                sum by (machineset) (label_replace(rate(node_cpu_seconds_total{mode="idle"}[15m]), "node", "$1", "instance", "(.+)") * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"(app)"}, "node", "$1", "node_ref", "(.+)")) + on(machineset) (min by(machineset) (component_openshift4_monitoring_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) - on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")) * on(machineset) max by (machineset) (kube_node_status_capacity{resource="cpu"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")) / max by (machineset) (kube_node_status_capacity{resource="cpu"} * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)"))
+              , "resource", "cpu", "", "")
+            )
+            ) > 4.000000
+          for: 8h
+          labels:
+            severity: warning
+            syn: 'true'
+            syn_component: openshift4-monitoring

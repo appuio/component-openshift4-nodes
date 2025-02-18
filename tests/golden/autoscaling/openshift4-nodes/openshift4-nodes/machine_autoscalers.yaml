@@ -1,11 +1,13 @@
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
+maxReplicas: 6
 metadata:
   annotations: {}
   labels:
     name: app
   name: app
   namespace: openshift-machine-api
+minReplicas: 3
 spec:
   maxReplicas: 6
   minReplicas: 3
