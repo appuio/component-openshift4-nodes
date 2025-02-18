@@ -4,6 +4,7 @@ local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
+local metrics = import 'autoscaling-metrics.libsonnet';
 
 local priorityExpanderConfigmap =
   if std.length(params.autoscaling.priorityExpanderConfig) > 0 then
@@ -145,6 +146,8 @@ if params.autoscaling.enabled then
     [if priorityExpanderConfigmap != null then
       'priority_expander_configmap']: priorityExpanderConfigmap,
     ignoreDifferences:: ignoreDifferences,
+    [if params.autoscaling.customMetrics.enabled then
+      'autoscaling_metrics_prometheusrules']: metrics,
   }
 else {
   ignoreDifferences:: [],

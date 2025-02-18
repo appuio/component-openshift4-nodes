@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  annotations: {}
+  labels:
+    name: autoscaling-metrics
+  name: autoscaling-metrics
+  namespace: foo
+spec:
+  groups:
+    - name: component-openshift4-nodes-autoscaling-prometheusrules
+      rules:
+        - expr: vector(3)
+          labels:
+            foo: bar
+            machineset: app
+          record: component_openshift4_nodes_machineset_replicas_min
+        - expr: vector(6)
+          labels:
+            foo: bar
+            machineset: app
+          record: component_openshift4_nodes_machineset_replicas_max

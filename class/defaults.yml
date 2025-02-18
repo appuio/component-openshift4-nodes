@@ -93,6 +93,9 @@ parameters:
       clusterAutoscaler: {}
       machineAutoscalers: {}
       priorityExpanderConfig: {}
+      customMetrics:
+        enabled: false
+        extraLabels: {}
 
     machineConfigPools:
       infra: {}
