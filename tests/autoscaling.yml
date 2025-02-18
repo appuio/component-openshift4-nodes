@@ -14,7 +14,7 @@ parameters:
         app:
           minReplicas: 3
           maxReplicas: 6
-      metrics:
+      customMetrics:
         enabled: true
         extraLabels:
           foo: bar

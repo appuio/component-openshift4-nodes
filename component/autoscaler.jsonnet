@@ -146,7 +146,7 @@ if params.autoscaling.enabled then
     [if priorityExpanderConfigmap != null then
       'priority_expander_configmap']: priorityExpanderConfigmap,
     ignoreDifferences:: ignoreDifferences,
-    [if params.autoscaling.metrics.enabled then
+    [if params.autoscaling.customMetrics.enabled then
       'autoscaling_metrics_prometheusrules']: metrics,
   }
 else {

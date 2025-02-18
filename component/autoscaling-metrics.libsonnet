@@ -15,14 +15,14 @@ local rulesFromMachineSet(name) = [
   {
     record: ruleNameMin,
     expr: 'vector(%(minReplicas)s)' % params.autoscaling.machineAutoscalers[name],
-    labels: params.autoscaling.metrics.extraLabels {
+    labels: params.autoscaling.customMetrics.extraLabels {
       machineset: name,
     },
   },
   {
     record: ruleNameMax,
     expr: 'vector(%(maxReplicas)s)' % params.autoscaling.machineAutoscalers[name],
-    labels: params.autoscaling.metrics.extraLabels {
+    labels: params.autoscaling.customMetrics.extraLabels {
       machineset: name,
     },
   },
