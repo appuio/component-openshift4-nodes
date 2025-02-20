@@ -111,44 +111,44 @@ local resourceCapacity(resource) = aggregate(filterWorkerNodes('kube_node_status
 local resourceAllocatable(resource) = aggregate(filterWorkerNodes('kube_node_status_allocatable{resource="%s"}' % resource));
 local resourceRequests(resource) = aggregate(filterWorkerNodes('kube_pod_resource_request{resource="%s"}' % resource));
 
-local memoryRequestsCapPerNode = maxPerNode('kube_node_status_allocatable{resource="memory"}');
-local memoryCapPerNode = maxPerNode('kube_node_status_capacity{resource="memory"}');
-local memoryAllocatable = adjustForAutoScaling(resourceAllocatable('memory'), memoryRequestsCapPerNode);
-local memoryAllocatableMin = adjustForAutoScaling(resourceAllocatable('memory'), memoryRequestsCapPerNode, direction='min');
+local memoryRequestsCapacityPerNode = maxPerNode('kube_node_status_allocatable{resource="memory"}');
+local memoryCapacityPerNode = maxPerNode('kube_node_status_capacity{resource="memory"}');
+local memoryAllocatableAtMaxCapacity = adjustForAutoScaling(resourceAllocatable('memory'), memoryRequestsCapacityPerNode);
+local memoryAllocatableAtMinCapacity = adjustForAutoScaling(resourceAllocatable('memory'), memoryRequestsCapacityPerNode, direction='min');
 local memoryRequests = resourceRequests('memory');
-local memoryFree = adjustForAutoScaling(aggregate(filterWorkerNodes('node_memory_MemAvailable_bytes', nodeLabel='instance')), memoryCapPerNode);
-local memoryFreeMin = adjustForAutoScaling(aggregate(filterWorkerNodes('node_memory_MemAvailable_bytes', nodeLabel='instance')), memoryCapPerNode, direction='min');
+local memoryFreeAtMaxCapacity = adjustForAutoScaling(aggregate(filterWorkerNodes('node_memory_MemAvailable_bytes', nodeLabel='instance')), memoryCapacityPerNode);
+local memoryFreeAtMinCapacity = adjustForAutoScaling(aggregate(filterWorkerNodes('node_memory_MemAvailable_bytes', nodeLabel='instance')), memoryCapacityPerNode, direction='min');
 
-local cpuRequestsCapPerNode = maxPerNode('kube_node_status_allocatable{resource="cpu"}');
-local cpuCapPerNode = maxPerNode('kube_node_status_capacity{resource="cpu"}');
-local cpuAllocatable = adjustForAutoScaling(resourceAllocatable('cpu'), cpuRequestsCapPerNode);
-local cpuAllocatableMin = adjustForAutoScaling(resourceAllocatable('cpu'), cpuRequestsCapPerNode, direction='min');
+local cpuRequestsCapacityPerNode = maxPerNode('kube_node_status_allocatable{resource="cpu"}');
+local cpuCapacityPerNode = maxPerNode('kube_node_status_capacity{resource="cpu"}');
+local cpuAllocatableAtMaxCapacity = adjustForAutoScaling(resourceAllocatable('cpu'), cpuRequestsCapacityPerNode);
+local cpuAllocatableAtMinCapacity = adjustForAutoScaling(resourceAllocatable('cpu'), cpuRequestsCapacityPerNode, direction='min');
 local cpuRequests = resourceRequests('cpu');
-local cpuIdle = adjustForAutoScaling(aggregate(filterWorkerNodes('rate(node_cpu_seconds_total{mode="idle"}[15m])', nodeLabel='instance')), cpuCapPerNode);
-local cpuIdleMin = adjustForAutoScaling(aggregate(filterWorkerNodes('rate(node_cpu_seconds_total{mode="idle"}[15m])', nodeLabel='instance')), cpuCapPerNode, direction='min');
+local cpuIdleAtMaxCapacity = adjustForAutoScaling(aggregate(filterWorkerNodes('rate(node_cpu_seconds_total{mode="idle"}[15m])', nodeLabel='instance')), cpuCapacityPerNode);
+local cpuIdleAtMinCapacity = adjustForAutoScaling(aggregate(filterWorkerNodes('rate(node_cpu_seconds_total{mode="idle"}[15m])', nodeLabel='instance')), cpuCapacityPerNode, direction='min');
 
-local podCapPerNode = maxPerNode('kube_node_status_capacity{resource="pods"}');
-local podCapacity = adjustForAutoScaling(resourceCapacity('pods'), podCapPerNode);
-local podCapacityMin = adjustForAutoScaling(resourceCapacity('pods'), podCapPerNode, direction='min');
+local podCapacityPerNode = maxPerNode('kube_node_status_capacity{resource="pods"}');
+local podCapacityAtMaxCapacity = adjustForAutoScaling(resourceCapacity('pods'), podCapacityPerNode);
+local podCapacityAtMinCapacity = adjustForAutoScaling(resourceCapacity('pods'), podCapacityPerNode, direction='min');
 local podCount = aggregate(filterWorkerNodes('kubelet_running_pods'));
 
 local getExpr = function(group, rule) params.capacityAlerts.groups[group].rules[rule].expr;
 local unusedReserved = getExpr('NodesUnusedCapacity', 'ClusterHasUnusedNodes').reserved;
 
 local exprMap = {
-  TooManyPods: function(arg) '%s - %s < %f * %s' % [ podCapacity, podCount, arg.factor, podCapPerNode ],
-  ExpectTooManyPods: function(arg) '%s - %s < %f * %s' % [ podCapacity, predict(podCount, range=arg.range, predict=arg.predict), arg.factor, podCapPerNode ],
+  TooManyPods: function(arg) '%s - %s < %f * %s' % [ podCapacityAtMaxCapacity, podCount, arg.factor, podCapacityPerNode ],
+  ExpectTooManyPods: function(arg) '%s - %s < %f * %s' % [ podCapacityAtMaxCapacity, predict(podCount, range=arg.range, predict=arg.predict), arg.factor, podCapacityPerNode ],
 
-  TooMuchMemoryRequested: function(arg) '%s - %s < %f * %s' % [ memoryAllocatable, memoryRequests, arg.factor, memoryRequestsCapPerNode ],
-  ExpectTooMuchMemoryRequested: function(arg) '%s - %s < %f * %s' % [ memoryAllocatable, predict(memoryRequests, range=arg.range, predict=arg.predict), arg.factor, memoryRequestsCapPerNode ],
-  TooMuchCPURequested: function(arg) '%s - %s < %f * %s' % [ cpuAllocatable, cpuRequests, arg.factor, cpuRequestsCapPerNode ],
-  ExpectTooMuchCPURequested: function(arg) '%s - %s < %f * %s' % [ cpuAllocatable, predict(cpuRequests, range=arg.range, predict=arg.predict), arg.factor, cpuRequestsCapPerNode ],
+  TooMuchMemoryRequested: function(arg) '%s - %s < %f * %s' % [ memoryAllocatableAtMaxCapacity, memoryRequests, arg.factor, memoryRequestsCapacityPerNode ],
+  ExpectTooMuchMemoryRequested: function(arg) '%s - %s < %f * %s' % [ memoryAllocatableAtMaxCapacity, predict(memoryRequests, range=arg.range, predict=arg.predict), arg.factor, memoryRequestsCapacityPerNode ],
+  TooMuchCPURequested: function(arg) '%s - %s < %f * %s' % [ cpuAllocatableAtMaxCapacity, cpuRequests, arg.factor, cpuRequestsCapacityPerNode ],
+  ExpectTooMuchCPURequested: function(arg) '%s - %s < %f * %s' % [ cpuAllocatableAtMaxCapacity, predict(cpuRequests, range=arg.range, predict=arg.predict), arg.factor, cpuRequestsCapacityPerNode ],
 
-  ClusterLowOnMemory: function(arg) '%s < %f * %s' % [ memoryFree, arg.factor, memoryCapPerNode ],
-  ExpectClusterLowOnMemory: function(arg) '%s < %f * %s' % [ predict(memoryFree, range=arg.range, predict=arg.predict), arg.factor, memoryCapPerNode ],
+  ClusterLowOnMemory: function(arg) '%s < %f * %s' % [ memoryFreeAtMaxCapacity, arg.factor, memoryCapacityPerNode ],
+  ExpectClusterLowOnMemory: function(arg) '%s < %f * %s' % [ predict(memoryFreeAtMaxCapacity, range=arg.range, predict=arg.predict), arg.factor, memoryCapacityPerNode ],
 
-  ClusterCpuUsageHigh: function(arg) '%s < %f * %s' % [ cpuIdle, arg.factor, cpuCapPerNode ],
-  ExpectClusterCpuUsageHigh: function(arg) '%s < %f * %s' % [ predict(cpuIdle, range=arg.range, predict=arg.predict), arg.factor, cpuCapPerNode ],
+  ClusterCpuUsageHigh: function(arg) '%s < %f * %s' % [ cpuIdleAtMaxCapacity, arg.factor, cpuCapacityPerNode ],
+  ExpectClusterCpuUsageHigh: function(arg) '%s < %f * %s' % [ predict(cpuIdleAtMaxCapacity, range=arg.range, predict=arg.predict), arg.factor, cpuCapacityPerNode ],
 
   ClusterHasUnusedNodes: function(arg)
     '%s > %f' % [
@@ -177,23 +177,23 @@ local exprMap = {
           )
         ||| %
         [
-          podCapacityMin,
+          podCapacityAtMinCapacity,
           podCount,
-          podCapPerNode,
+          podCapacityPerNode,
 
-          memoryAllocatableMin,
+          memoryAllocatableAtMinCapacity,
           memoryRequests,
-          memoryRequestsCapPerNode,
+          memoryRequestsCapacityPerNode,
 
-          cpuAllocatableMin,
+          cpuAllocatableAtMinCapacity,
           cpuRequests,
-          cpuRequestsCapPerNode,
+          cpuRequestsCapacityPerNode,
 
-          memoryFreeMin,
-          memoryCapPerNode,
+          memoryFreeAtMinCapacity,
+          memoryCapacityPerNode,
 
-          cpuIdleMin,
-          cpuCapPerNode,
+          cpuIdleAtMinCapacity,
+          cpuCapacityPerNode,
         ],
 
         'min'
