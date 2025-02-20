@@ -2,3 +2,4 @@
 * xref:references/parameters.adoc[Parameters]
 * Explanations
 ** xref:explanations/machine-config-pool.adoc[Machine Config Pools]
+** xref:explanations/resource_management.adoc[Resource Management]

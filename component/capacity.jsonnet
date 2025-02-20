@@ -133,7 +133,7 @@ local podCapacityMin = adjustForAutoScaling(resourceCapacity('pods'), podCapPerN
 local podCount = aggregate(filterWorkerNodes('kubelet_running_pods'));
 
 local getExpr = function(group, rule) params.capacityAlerts.groups[group].rules[rule].expr;
-local unusedReserved = getExpr('UnusedCapacity', 'ClusterHasUnusedNodes').reserved;
+local unusedReserved = getExpr('NodesUnusedCapacity', 'ClusterHasUnusedNodes').reserved;
 
 local exprMap = {
   TooManyPods: function(arg) '%s - %s < %f * %s' % [ podCapacity, podCount, arg.factor, podCapPerNode ],

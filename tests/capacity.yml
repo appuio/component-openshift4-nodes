@@ -14,22 +14,21 @@ parameters:
       groupByNodeLabels:
         - label_appuio_io_node_class
       groups:
-        PodCapacity:
+        NodesPodCapacity:
           rules:
             ExpectTooManyPods:
               enabled: true
-        ResourceRequests:
+        NodesResourceRequests:
           rules:
             ExpectTooMuchMemoryRequested:
               enabled: true
             ExpectTooMuchCPURequested:
               enabled: true
-        MemoryCapacity:
+        NodesMemoryCapacity:
           rules:
             ExpectClusterLowOnMemory:
               enabled: true
-        CpuCapacity:
+        NodesCpuCapacity:
           rules:
             ExpectClusterCpuUsageHigh:
               enabled: true
-

@@ -132,9 +132,9 @@ parameters:
     capacityAlerts:
       enabled: false
       monitorNodeRoles:
-      - app
+        - app
       monitorMachineSets:
-      - worker
+        - worker
       groupByNodeLabels: []
       groups:
         NodesPodCapacity:

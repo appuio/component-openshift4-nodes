@@ -679,6 +679,80 @@ For the ConfigMap data shown above the script will configure the following dummy
 * `egress_a_0` - `egress_a_31` with IPs 198.51.100.32 - 195.51.100.63 on node infra-foo.
 * `egress_a_0` - `egress_a_31` with IPs 198.51.100.64 - 195.51.100.95 on node infra-bar.
 
+== `capacityAlerts`
+
+[horizontal]
+type:: dict
+
+This parameter allows users to enable and configure alerts for node capacity management.
+The capacity alerts are disabled by default and can be enabled by setting the key `capacityAlerts.enabled` to `true`.
+Predictive alerts are disabled by default and can be enabled individually as shown below by setting `ExpectClusterCpuUsageHigh.enabled` to `true`.
+
+The dictionary will be transformed into a `PrometheusRule` object by the component.
+
+The component provides 10 alerts that are grouped in four groups.
+You can disable or modify each of these alert rules individually.
+The fields in these rules will be added to the final `PrometheusRule`, with the exception of `expr`.
+The `expr` field contains fields which can be used to tune the default alert rule.
+Alternatively, the default rule can be completely overwritten by setting the `expr.raw` field (see example below).
+See xref:explanations/resource_management.adoc[Resource Management] for an explanation for every alert rule.
+
+Nodes are grouped by machineSet if machineSets are in use on the cluster.
+If machineSets are not in use, nodes are grouped by node role instead.
+The component automatically determines whether to group by machineSets or node roles.
+
+When grouping by node role, it is possible to further group the nodes by additional node labels by specifying `capacityAlerts.groupByNodeLabels`.
+When grouping by machineSets, there is no equivalent setting.
+
+Example:
+
+[source,yaml]
+----
+capacityAlerts:
+  enabled: true <1>
+  groupByNodeLabels: [] <2>
+  monitorNodeRoles:
+   - app <3>
+  groups:
+    PodCapacity:
+      rules:
+        TooManyPods:
+          annotations:
+            message: 'The number of pods is too damn high' <4>
+          for: 3h <5>
+        ExpectTooManyPods:
+          expr: <6>
+            range: '2d'
+            predict: '5*24*60*60'
+
+    ResourceRequests:
+      rules:
+        TooMuchMemoryRequested:
+          enabled: true
+          expr:
+            raw: sum(kube_pod_resource_request{resource="memory"}) > 9000*1024*1024*1024 <7>
+    CpuCapacity:
+      rules:
+        ClusterCpuUsageHigh:
+          enabled: false <8>
+        ExpectClusterCpuUsageHigh:
+          enabled: false <8>
+    UnusedCapacity:
+      rules:
+        ClusterHasUnusedNodes:
+          enabled: false <9>
+----
+<1> Enables capacity alerts
+<2> List of node labels (as they show up in the `kube_node_labels` metric) by which alerts are grouped (only available if machineSets are not in use)
+<3> List of node roles to monitor. This is used only if machineSets are not in use. If machineSets are used, the parameter `monitorMachineSets` is used instead.
+<4> Changes the alert message for the pod capacity alert
+<5> Only alerts for pod capacity if it fires for 3 hours
+<6> Change the pod count prediction to look at the last two days and predict the value in five days
+<7> Completely overrides the default alert rule and alerts if the total memory request is over 9000 GB
+<8> Disables both CPU capacity alert rules
+<9> Disables alert if the cluster has unused nodes.
+
+
 == Example
 
 [source,yaml]

@@ -57,5 +57,5 @@ parameters:
     capacityAlerts:
       enabled: true
       monitorMachineSets:
-      - app
-      - ~worker
+        - app
+        - ~worker

@@ -9,7 +9,7 @@ metadata:
   namespace: foo
 spec:
   groups:
-    - name: syn-CpuCapacity
+    - name: syn-NodesCpuCapacity
       rules:
         - alert: SYN_ClusterCpuUsageHigh
           annotations:
@@ -50,7 +50,7 @@ spec:
             severity: warning
             syn: 'true'
             syn_component: openshift4-monitoring
-    - name: syn-MemoryCapacity
+    - name: syn-NodesMemoryCapacity
       rules:
         - alert: SYN_ClusterLowOnMemory
           annotations:
@@ -91,7 +91,7 @@ spec:
             severity: warning
             syn: 'true'
             syn_component: openshift4-monitoring
-    - name: syn-PodCapacity
+    - name: syn-NodesPodCapacity
       rules:
         - alert: SYN_ExpectTooManyPods
           annotations:
@@ -136,7 +136,7 @@ spec:
             severity: warning
             syn: 'true'
             syn_component: openshift4-monitoring
-    - name: syn-ResourceRequests
+    - name: syn-NodesResourceRequests
       rules:
         - alert: SYN_ExpectTooMuchCPURequested
           annotations:
@@ -225,7 +225,7 @@ spec:
             severity: warning
             syn: 'true'
             syn_component: openshift4-monitoring
-    - name: syn-UnusedCapacity
+    - name: syn-NodesUnusedCapacity
       rules:
         - alert: SYN_ClusterHasUnusedNodes
           annotations:
