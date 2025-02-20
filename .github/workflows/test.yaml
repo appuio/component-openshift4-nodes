@@ -39,6 +39,7 @@ jobs:
           - machineconfig
           - remove-machineconfigpool
           - autoscaling
+          - capacity
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
@@ -60,6 +61,7 @@ jobs:
           - machineconfig
           - remove-machineconfigpool
           - autoscaling
+          - capacity
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}

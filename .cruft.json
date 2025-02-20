@@ -7,7 +7,7 @@
       "name": "OpenShift 4 Nodes",
       "slug": "openshift4-nodes",
       "parameter_key": "openshift4_nodes",
-      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling",
+      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling capacity",
       "add_lib": "n",
       "add_pp": "n",
       "add_golden": "y",
@@ -24,7 +24,8 @@
       "github_owner": "appuio",
       "github_name": "component-openshift4-nodes",
       "github_url": "https://github.com/appuio/component-openshift4-nodes",
-      "_template": "https://github.com/projectsyn/commodore-component-template.git"
+      "_template": "https://github.com/projectsyn/commodore-component-template.git",
+      "_commit": "98d16f99766e6c6d97322dbe42e058f0e2bf73d0"
     }
   },
   "directory": null
