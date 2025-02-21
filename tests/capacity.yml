@@ -1,0 +1,34 @@
+# Overwrite parameters here
+parameters:
+  kapitan:
+    dependencies:
+      - type: https
+        source: https://raw.githubusercontent.com/appuio/component-openshift4-monitoring/v6.8.0/lib/openshift4-monitoring-prom.libsonnet
+        output_path: vendor/lib/prom.libsonnet
+  openshift4_monitoring:
+    namespace: foo
+
+  openshift4_nodes:
+    capacityAlerts:
+      enabled: true
+      groupByNodeLabels:
+        - label_appuio_io_node_class
+      groups:
+        NodesPodCapacity:
+          rules:
+            ExpectTooManyPods:
+              enabled: true
+        NodesResourceRequests:
+          rules:
+            ExpectTooMuchMemoryRequested:
+              enabled: true
+            ExpectTooMuchCPURequested:
+              enabled: true
+        NodesMemoryCapacity:
+          rules:
+            ExpectClusterLowOnMemory:
+              enabled: true
+        NodesCpuCapacity:
+          rules:
+            ExpectClusterCpuUsageHigh:
+              enabled: true
