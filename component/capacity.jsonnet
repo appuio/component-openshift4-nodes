@@ -97,8 +97,8 @@ local adjustForAutoScaling(freeResourceMetric, capacityPerNode, nodeLabel='node'
   if useMachineSets then
     if hasAutoScaling then
       local currentNodeCountMetric = 'mapi_machine_set_status_replicas_ready';
-      local machinesetMaxSize = 'max by(machineset) (component_openshift4_monitoring_machineset_replicas_max or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
-      local machinesetMinSize = 'min by(machineset) (component_openshift4_monitoring_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+      local machinesetMaxSize = 'max by(machineset) (component_openshift4_nodes_machineset_replicas_max or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+      local machinesetMinSize = 'min by(machineset) (component_openshift4_nodes_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
       local currentNodeCountMetric = 'label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")';
       '%(metric)s + on(machineset) (%(minOrMax)s - on(machineset) %(currentNodeCount)s) * on(machineset) %(capacityPerNode)s' %
       { metric: freeResourceMetric, nodeLabel: nodeLabel, minOrMax: if direction == 'max' then machinesetMaxSize else machinesetMinSize, currentNodeCount: currentNodeCountMetric, capacityPerNode: capacityPerNode }
