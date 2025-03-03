@@ -128,7 +128,15 @@ local ignoreDifferences = [
     jsonPointers: [ '/spec/replicas' ],
   }
   for ma in machineAutoscalers
-];
+] + (if std.objectHas(params.autoscaling, 'ignoreDownScalingSync')
+        && params.autoscaling.ignoreDownScalingSync then [
+       {
+         group: 'autoscaling.openshift.io/v1',
+         kind: 'ClusterAutoscaler',
+         name: 'default',
+         jsonPointers: [ '/spec/scaleDown/enabled' ],
+       },
+     ] else []);
 
 if params.autoscaling.enabled then
   {
