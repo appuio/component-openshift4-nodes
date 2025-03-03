@@ -10,6 +10,7 @@ parameters:
   openshift4_nodes:
     autoscaling:
       enabled: true
+      ignoreDownScalingSync: true
       machineAutoscalers:
         app:
           minReplicas: 3
