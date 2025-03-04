@@ -5,7 +5,7 @@ spec:
         - /spec/replicas
       kind: MachineSet
       name: app
-    - group: autoscaling.openshift.io/v1
+    - group: autoscaling.openshift.io
       jsonPointers:
         - /spec/scaleDown/enabled
       kind: ClusterAutoscaler
