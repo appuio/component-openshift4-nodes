@@ -96,6 +96,12 @@ parameters:
       customMetrics:
         enabled: false
         extraLabels: {}
+      ignoreDownscalingSync: false
+      schedule:
+        enabled: false
+        enableExpression: '0 22 * * 2'
+        disableExpression: '0 1 * * 3'
+        timeZone: 'Europe/Zurich'
 
     machineConfigPools:
       infra: {}

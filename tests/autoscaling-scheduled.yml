@@ -10,6 +10,10 @@ parameters:
   openshift4_nodes:
     autoscaling:
       enabled: true
+      ignoreDownscalingSync: true
+      clusterAutoscaler:
+        scaleDown:
+          enabled: false
       machineAutoscalers:
         app:
           minReplicas: 3
@@ -18,6 +22,8 @@ parameters:
         enabled: true
         extraLabels:
           foo: bar
+      schedule:
+        enabled: true
 
     machineSets:
       app:

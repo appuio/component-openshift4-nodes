@@ -268,7 +268,7 @@ default:: `false`
 
 Whether to configure autoscaling for the cluster.
 
-=== `autoscaling.ignoreDownScalingSync`
+=== `autoscaling.ignoreDownscalingSync`
 
 [horizontal]
 type:: bool
@@ -363,6 +363,38 @@ type:: dictionary
 default:: `{}`
 
 Additional label-value pairs to add to the autoscaling metrics.
+
+=== `autoscaling.schedule.enabled`
+
+[horizontal]
+type:: bool
+default:: `false`
+
+Whether to enable scheduled downscaling.
+
+=== `autoscaling.schedule.enableExpression`
+
+[horizontal]
+type:: string
+default:: `0 22 * * 2`
+
+The cron expression to enable downscaling.
+
+=== `autoscaling.schedule.disableExpression`
+
+[horizontal]
+type:: string
+default:: `0 1 * * 3`
+
+The cron expression to disable downscaling.
+
+=== `autoscaling.schedule.timeZone`
+
+[horizontal]
+type:: string
+default:: `Europe/Zurich`
+
+The time zone to use for scheduled downscaling.
 
 === Example configuration
 
