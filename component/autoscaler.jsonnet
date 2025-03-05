@@ -131,7 +131,7 @@ local ignoreDifferences = [
 ] + (if std.objectHas(params.autoscaling, 'ignoreDownScalingSync')
         && params.autoscaling.ignoreDownScalingSync then [
        {
-         group: 'autoscaling.openshift.io/v1',
+         group: 'autoscaling.openshift.io',
          kind: 'ClusterAutoscaler',
          name: 'default',
          jsonPointers: [ '/spec/scaleDown/enabled' ],
