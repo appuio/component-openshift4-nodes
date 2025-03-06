@@ -5,6 +5,11 @@ spec:
         - /spec/replicas
       kind: MachineSet
       name: app
+    - group: autoscaling.openshift.io
+      jsonPointers:
+        - /spec/scaleDown/enabled
+      kind: ClusterAutoscaler
+      name: default
   syncPolicy:
     syncOptions:
       - RespectIgnoreDifferences=true

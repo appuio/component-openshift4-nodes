@@ -128,8 +128,7 @@ local ignoreDifferences = [
     jsonPointers: [ '/spec/replicas' ],
   }
   for ma in machineAutoscalers
-] + (if std.objectHas(params.autoscaling, 'ignoreDownScalingSync')
-        && params.autoscaling.ignoreDownScalingSync then [
+] + (if params.autoscaling.ignoreDownscalingSync then [
        {
          group: 'autoscaling.openshift.io',
          kind: 'ClusterAutoscaler',
@@ -137,6 +136,100 @@ local ignoreDifferences = [
          jsonPointers: [ '/spec/scaleDown/enabled' ],
        },
      ] else []);
+
+// Add new ServiceAccount
+local autoscalerServiceAccount = kube.ServiceAccount('scheduled-downscaler') {
+  metadata+: {
+    namespace: params.machineApiNamespace,
+  },
+};
+
+// Add new ClusterRole
+local autoscalerClusterRole = kube.ClusterRole('scheduled-downscaler-role') {
+  rules: [
+    {
+      apiGroups: [ 'autoscaling.openshift.io' ],
+      resources: [ 'clusterautoscalers' ],
+      verbs: [ 'get', 'patch' ],
+    },
+  ],
+};
+
+// Add new ClusterRoleBinding
+local autoscalerClusterRoleBinding = kube.ClusterRoleBinding('scheduled-downscaler-binding') {
+  roleRef: {
+    apiGroup: 'rbac.authorization.k8s.io',
+    kind: 'ClusterRole',
+    name: 'scheduled-downscaler-role',
+  },
+  subjects: [
+    {
+      kind: 'ServiceAccount',
+      name: 'scheduled-downscaler',
+      namespace: params.machineApiNamespace,
+    },
+  ],
+};
+
+// Create base CronJob function
+local scheduledDownscalerCronJob(name, schedule, timeZone, enabled) = kube.CronJob('scheduled-downscaler-' + name) {
+  metadata+: {
+    namespace: params.machineApiNamespace,
+  },
+  spec+: {
+    schedule: schedule,
+    timeZone: timeZone,
+    jobTemplate: {
+      spec: {
+        template: {
+          spec: {
+            serviceAccountName: 'scheduled-downscaler',
+            containers: [
+              {
+                name: 'autoscale-' + name + 'r',
+                image: '%(registry)s/%(repository)s:%(tag)s' % params.images.oc,
+                imagePullPolicy: 'IfNotPresent',
+                command: [
+                  'oc',
+                  'patch',
+                  'clusterautoscalers',
+                  'default',
+                  '--type',
+                  'merge',
+                  '-p',
+                  '{"spec":{"scaleDown":{"enabled": ' + enabled + '}}}',
+                ],
+                env: [
+                  {
+                    name: 'HOME',
+                    value: '/home/downscaler',
+                  },
+                ],
+                volumeMounts: [
+                  {
+                    name: 'home',
+                    mountPath: '/home/downscaler',
+                  },
+                ],
+              },
+            ],
+            volumes: [
+              {
+                name: 'home',
+                emptyDir: {},
+              },
+            ],
+            restartPolicy: 'Never',
+          },
+        },
+      },
+    },
+  },
+};
+
+// Create the enable and disable jobs using the base function
+local enableDownscalerCronJob = scheduledDownscalerCronJob('enable', params.autoscaling.schedule.enableExpression, params.autoscaling.schedule.timeZone, true);
+local disableDownscalerCronJob = scheduledDownscalerCronJob('disable', params.autoscaling.schedule.disableExpression, params.autoscaling.schedule.timeZone, false);
 
 if params.autoscaling.enabled then
   {
@@ -153,6 +246,14 @@ if params.autoscaling.enabled then
       'machine_autoscalers']: machineAutoscalers,
     [if priorityExpanderConfigmap != null then
       'priority_expander_configmap']: priorityExpanderConfigmap,
+    [if params.autoscaling.schedule.enabled then
+      'downscale_cronjobs']: [
+      autoscalerServiceAccount,
+      autoscalerClusterRole,
+      autoscalerClusterRoleBinding,
+      enableDownscalerCronJob,
+      disableDownscalerCronJob,
+    ],
     ignoreDifferences:: ignoreDifferences,
     [if params.autoscaling.customMetrics.enabled then
       'autoscaling_metrics_prometheusrules']: metrics,

@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: scheduled-downscaler
+  name: scheduled-downscaler
+  namespace: openshift-machine-api
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations: {}
+  labels:
+    name: scheduled-downscaler-role
+  name: scheduled-downscaler-role
+rules:
+  - apiGroups:
+      - autoscaling.openshift.io
+    resources:
+      - clusterautoscalers
+    verbs:
+      - get
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: scheduled-downscaler-binding
+  name: scheduled-downscaler-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: scheduled-downscaler-role
+subjects:
+  - kind: ServiceAccount
+    name: scheduled-downscaler
+    namespace: openshift-machine-api
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations: {}
+  labels:
+    name: scheduled-downscaler-enable
+  name: scheduled-downscaler-enable
+  namespace: openshift-machine-api
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 20
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - command:
+                - oc
+                - patch
+                - clusterautoscalers
+                - default
+                - --type
+                - merge
+                - -p
+                - '{"spec":{"scaleDown":{"enabled": true}}}'
+              env:
+                HOME: /home/downscaler
+              image: quay.io/appuio/oc:v4.16
+              imagePullPolicy: IfNotPresent
+              name: autoscale-enabler
+              volumeMounts:
+                home:
+                  mountPath: /home/downscaler
+          restartPolicy: Never
+          serviceAccountName: scheduled-downscaler
+          volumes:
+            home:
+              emptyDir: {}
+  schedule: 0 22 * * 2
+  successfulJobsHistoryLimit: 10
+  timeZone: Europe/Zurich
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations: {}
+  labels:
+    name: scheduled-downscaler-disable
+  name: scheduled-downscaler-disable
+  namespace: openshift-machine-api
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 20
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - command:
+                - oc
+                - patch
+                - clusterautoscalers
+                - default
+                - --type
+                - merge
+                - -p
+                - '{"spec":{"scaleDown":{"enabled": false}}}'
+              env:
+                HOME: /home/downscaler
+              image: quay.io/appuio/oc:v4.16
+              imagePullPolicy: IfNotPresent
+              name: autoscale-disabler
+              volumeMounts:
+                home:
+                  mountPath: /home/downscaler
+          restartPolicy: Never
+          serviceAccountName: scheduled-downscaler
+          volumes:
+            home:
+              emptyDir: {}
+  schedule: 0 1 * * 3
+  successfulJobsHistoryLimit: 10
+  timeZone: Europe/Zurich
