@@ -1,5 +1,5 @@
 #!/bin/bash
-set -exo pipefail
+set -ex
 
 for pool in $(kubectl get machineconfigpool -ojson | jq -r '.items[].metadata.name'); do
   oc adm prune renderedmachineconfigs list --pool-name="$pool" |\
