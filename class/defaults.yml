@@ -2,6 +2,9 @@ parameters:
   openshift4_nodes:
     =_metadata:
       multi_tenant: true
+    openshiftVersion:
+      Major: '4'
+      Minor: '16'
     machineApiNamespace: openshift-machine-api
     projectName: none
     infrastructureID: none

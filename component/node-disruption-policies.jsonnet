@@ -166,7 +166,19 @@ local managedresource =
     },
   };
 
-{
-  nodedisruptionpolicies_rbac: [ sa, cr, crb, role, rb ],
-  nodedisruptionpolicies_managedresource: [ jsonnetlib, managedresource ],
-}
+local ocpMinor = std.parseInt(params.openshiftVersion.Minor);
+
+if ocpMinor >= 17 && std.member(inv.applications, 'espejote') then
+  {
+    nodedisruptionpolicies_rbac: [ sa, cr, crb, role, rb ],
+    nodedisruptionpolicies_managedresource: [ jsonnetlib, managedresource ],
+  }
+else
+  local reason = if ocpMinor >= 17 then
+    'Espejote not installed'
+  else
+    'Node disruption policies not available on OpenShift 4.%d' % ocpMinor;
+  std.trace(
+    'Skipping configuration of node disruption policy management: %s.' % reason,
+    {}
+  )
