@@ -132,6 +132,11 @@ parameters:
         namespace: cilium
         name: eip-shadow-ranges
 
+    nodeDisruptionPolicies:
+      files: {}
+      units: {}
+      sshkey_actions: []
+
     images:
       oc:
         registry: quay.io
