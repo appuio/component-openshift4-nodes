@@ -1,10 +1,67 @@
 local com = import 'lib/commodore.libjsonnet';
+local espejote = import 'lib/espejote.libsonnet';
 local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
 local metrics = import 'autoscaling-metrics.libsonnet';
+
+local autoscalerArgsPatch = if params.autoscaling.addAutoscalerArgs != null && std.length(params.autoscaling.addAutoscalerArgs) > 0 then
+  assert std.member(inv.applications, 'espejote') : 'The addAutoscalerArgs patch depends on espejote';
+  {
+    autoscaler_inject_args_admission: espejote.admission('autoscaler-inject-args', params.machineApiNamespace) {
+      metadata+: {
+        annotations+: {
+          'syn.tools/description': |||
+            Injects autoscaler arguments to the default autoscaler pod in the openshift-machine-api namespace.
+            Arguments are taken from the a JsonnetLibrary manifest with the same name.
+
+            The patch blindly adds the arguments without trying to replace them if they already exist.
+            I debated replacing them but we won't be able to guess all upstream changes in the args array and our args parsing might fail anyways.
+            I prefer a simpler patch that fails fast to a convoluted args array merge.
+          |||,
+        },
+      },
+      spec: {
+        mutating: true,
+        webhookConfiguration: {
+          rules: [
+            {
+              apiGroups: [
+                '',
+              ],
+              apiVersions: [
+                '*',
+              ],
+              operations: [
+                'CREATE',
+              ],
+              resources: [
+                'pods',
+              ],
+            },
+          ],
+          objectSelector: {
+            matchLabels: {
+              'cluster-autoscaler': 'default',
+              'k8s-app': 'cluster-autoscaler',
+            },
+          },
+        },
+        template: importstr 'espejote-templates/patch-autoscaler-args.jsonnet',
+      },
+    },
+    autoscaler_inject_args_jsonnetlibrary: espejote.jsonnetLibrary('autoscaler-inject-args', params.machineApiNamespace) {
+      spec: {
+        data: {
+          'flags.json': std.manifestJson(params.autoscaling.addAutoscalerArgs),
+        },
+      },
+    },
+  }
+else
+  {};
 
 local priorityExpanderConfigmap =
   if std.length(params.autoscaling.priorityExpanderConfig) > 0 then
@@ -257,7 +314,7 @@ if params.autoscaling.enabled then
     ignoreDifferences:: ignoreDifferences,
     [if params.autoscaling.customMetrics.enabled then
       'autoscaling_metrics_prometheusrules']: metrics,
-  }
+  } + autoscalerArgsPatch
 else {
   ignoreDifferences:: [],
 }

@@ -1,0 +1,14 @@
+apiVersion: espejote.io/v1alpha1
+kind: JsonnetLibrary
+metadata:
+  labels:
+    app.kubernetes.io/name: autoscaler-inject-args
+  name: autoscaler-inject-args
+  namespace: openshift-machine-api
+spec:
+  data:
+    flags.json: |-
+      [
+          "--daemonset-eviction-for-occupied-nodes=false",
+          "--skip-nodes-with-local-storage=false"
+      ]

@@ -268,6 +268,26 @@ default:: `false`
 
 Whether to configure autoscaling for the cluster.
 
+=== `autoscaling.addAutoscalerArgs`
+
+[horizontal]
+type:: list
+default::
++
+[source,yaml]
+----
+addAutoscalerArgs:
+  - --daemonset-eviction-for-occupied-nodes=false
+  - --skip-nodes-with-local-storage=false
+----
+
+Patches the `default` cluster autoscaler pod with the provided arguments.
+
+Those arguments can't be set in the `ClusterAutoscaler` resource itself.
+
+* `--daemonset-eviction-for-occupied-nodes=false`: Disables eviction of DaemonSet pods to prevent CSI drivers and other required infrastructure pods from being evicted.
+* `--skip-nodes-with-local-storage=false`: Allows removing nodes with pods that use `emptyDir` volumes.
+
 === `autoscaling.ignoreDownscalingSync`
 
 [horizontal]
