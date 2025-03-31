@@ -40,6 +40,7 @@ jobs:
           - remove-machineconfigpool
           - autoscaling
           - capacity
+          - node-disruption-policies
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
@@ -62,6 +63,7 @@ jobs:
           - remove-machineconfigpool
           - autoscaling
           - capacity
+          - node-disruption-policies
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}

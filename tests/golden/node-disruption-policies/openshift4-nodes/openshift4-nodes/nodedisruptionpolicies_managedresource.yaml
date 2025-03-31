@@ -1,0 +1,210 @@
+apiVersion: espejote.io/v1alpha1
+kind: JsonnetLibrary
+metadata:
+  labels:
+    app.kubernetes.io/name: nodedisruptionpolicies
+  name: nodedisruptionpolicies
+  namespace: openshift-machine-config-operator
+spec:
+  data:
+    config.json: |-
+      {
+          "files": [
+              {
+                  "actions": [
+                      {
+                          "restart": {
+                              "serviceName": "chronyd.service"
+                          },
+                          "type": "Restart"
+                      }
+                  ],
+                  "path": "/etc/chrony.conf"
+              },
+              {
+                  "actions": [
+                      {
+                          "type": "None"
+                      }
+                  ],
+                  "path": "/usr/local/bin"
+              }
+          ],
+          "sshkey_actions": [
+
+          ],
+          "units": [
+
+          ]
+      }
+    ndp.libsonnet: |
+      // get node disruption policy from machineconfig annotation
+      local get_disruption_config(mc) =
+        local annotation_key = 'openshift4-nodes.syn.tools/node-disruption-policies';
+        local annotations = std.get(mc.metadata, 'annotations', {});
+        std.parseJson(std.get(annotations, annotation_key, '{}'));
+
+      // Validate passed list of node disruption policy actions.
+      // Currently only validates that actions lists with > 1 entry don't contain
+      // `Reboot` or `None`.
+      local validate_actions(actions) =
+        local valid =
+          std.length(actions) <= 1 ||
+          !(std.member(actions, { type: 'Reboot' }) || std.member(actions, { type: 'None' }));
+        assert valid : 'Actions %s is invalid' % [ actions ];
+        actions;
+
+      // Selects "most disruptive" list of actions from the passed list of lists.
+      // Reboot is treated as most disruptive, arbitrary other actions are
+      // concatenated (TBD if this makes sense) and None is treated as least
+      // disruptive.
+      local select_actions(actions) = validate_actions(std.foldl(
+        function(curr, a)
+          if std.length(a) == 0 then curr
+          else if std.length(curr) == 0 then a
+          else if curr[0].type == 'Reboot' then curr
+          else if a[0].type == 'Reboot' then a
+          else if curr[0].type == 'None' then a
+          else if a[0].type == 'None' then curr
+          else curr + a,
+        actions,
+        []
+      ));
+
+      // Removes duplicate entries from a list of policies. Should only be used for
+      // `files` and `units` policy lists. For duplicate entries, the most
+      // disruptive action (cf. `select_actions()` is picked for the resulting
+      // entry.
+      local remove_duplicates(pols, keyField) =
+        local pol_actions = std.foldl(function(res, p) res { [p[keyField]]+: [ p.actions ] }, pols, {});
+        [
+          {
+            [keyField]: k,
+            actions: select_actions(pol_actions[k]),
+          }
+          for k in std.objectFields(pol_actions)
+        ];
+
+
+      {
+        get_disruption_config: get_disruption_config,
+        select_actions: select_actions,
+        remove_duplicates: remove_duplicates,
+      }
+---
+apiVersion: espejote.io/v1alpha1
+kind: ManagedResource
+metadata:
+  annotations:
+    syn.tools/description: |
+      Manages `spec.nodeDisruptionPolicies` in the `machineconfiguration.operator/cluster` resource.
+
+      The contents of `spec.nodeDisruptionPolicies` are constructed from the
+      annotation `openshift4-nodes.syn.tools/node-disruption-policies` on all
+      non-generated MachineConfigs. We generally recommend defining very
+      specific paths for `files` disruption policies in order to avoid
+      confilicting configurations in the resulting merged config.
+
+      Any unmanaged contents of `spec.nodeDisruptionPolicies` are overwritten.
+      We explicitly execute the template when the
+      `machineconfiguration.operator/cluster` resource changes.
+
+      Generic disruption policies which are provided via Project Syn
+      parameter are provided in field `config.json` in the
+      `nodedisruptionpolicies` Espejote JsonnetLibrary resource.
+
+      NOTE: Don't configure `type: Restart` for systemd units that are managed
+      in the machineconfig resource. Doing so will cause nodes to become
+      degraded if the machineconfig is deleted.
+
+      NOTE: In general, we can't guarantee that node disruption policies
+      provided in an annotation will still be active when the machineconfig
+      is deleted. If you want to guarantee that removing a machineconfig
+      doesn't unnecessesarily reboots machines, we recommend defining
+      appropriate node disruption policies via the Project Syn hierarchy.
+  labels:
+    app.kubernetes.io/name: nodedisruptionpolicies
+  name: nodedisruptionpolicies
+  namespace: openshift-machine-config-operator
+spec:
+  applyOptions:
+    force: true
+  context:
+    - name: machineconfigs
+      resource:
+        apiVersion: machineconfiguration.openshift.io/v1
+        kind: MachineConfig
+        labelSelector:
+          matchExpressions:
+            - key: machineconfiguration.openshift.io/role
+              operator: Exists
+  serviceAccountRef:
+    name: nodedisruptionpolicies-manager
+  template: |
+    local esp = import 'espejote.libsonnet';
+    local ndp = import 'nodedisruptionpolicies/ndp.libsonnet';
+
+    local config = import 'nodedisruptionpolicies/config.json';
+    local machineconfigs = esp.context().machineconfigs;
+
+    local render_nodedisruptionpolicies() =
+      local configs = [ ndp.get_disruption_config(mc) for mc in machineconfigs ];
+      local policies =
+        {
+          files+:
+            std.get(config, 'files', []) +
+            std.flattenArrays([ std.get(dc, 'files', []) for dc in configs ]),
+          units+:
+            std.get(config, 'units', []) +
+            std.flattenArrays([ std.get(dc, 'units', []) for dc in configs ]),
+          sshkey+: {
+            actions:
+              [ std.get(config, 'sshkey_actions', []) ] +
+              [ std.get(dc, 'sshkey', { actions: [] }).actions for dc in configs ],
+          },
+        };
+      {
+        files: ndp.remove_duplicates(
+          std.sort(policies.files, keyF=function(e) e.path),
+          'path'
+        ),
+        units: ndp.remove_duplicates(
+          std.sort(policies.units, keyF=function(e) e.name),
+          'name'
+        ),
+        sshkey: { actions: ndp.select_actions(policies.sshkey.actions) },
+      };
+
+    local res = {
+      apiVersion: 'operator.openshift.io/v1',
+      kind: 'MachineConfiguration',
+      metadata: {
+        name: 'cluster',
+      },
+      spec: {
+        nodeDisruptionPolicy: render_nodedisruptionpolicies(),
+      },
+    };
+
+    assert
+      std.length(res.spec.nodeDisruptionPolicy.files) <= 50 :
+      'Max supported length of nodeDisruptionPolicy.files is 50';
+    assert
+      std.length(res.spec.nodeDisruptionPolicy.units) <= 50 :
+      'Max supported length of nodeDisruptionPolicy.units is 50';
+
+    [ res ]
+  triggers:
+    - name: machineconfig
+      watchContextResource:
+        name: machineconfigs
+    - name: machineconfiguration/cluster
+      watchResource:
+        apiVersion: operator.openshift.io/v1
+        kind: MachineConfiguration
+    - name: jsonnetlib
+      watchResource:
+        apiVersion: espejote.io/v1alpha1
+        kind: JsonnetLibrary
+        name: nodedisruptionpolicies
+        namespace: openshift-machine-config-operator
