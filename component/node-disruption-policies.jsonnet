@@ -142,10 +142,18 @@ local managedresource =
     spec: {
       serviceAccountRef: { name: sa.metadata.name },
       applyOptions: { force: true },
+      context: [
+        {
+          name: 'machineconfigs',
+          resource: machineconfigs,
+        },
+      ],
       triggers: [
         {
           name: 'machineconfig',
-          watchResource: machineconfigs,
+          watchContextResource: {
+            name: 'machineconfigs',
+          },
         },
         {
           name: 'machineconfiguration/cluster',
@@ -154,12 +162,6 @@ local managedresource =
         {
           name: 'jsonnetlib',
           watchResource: jsonnetlib_ref,
-        },
-      ],
-      context: [
-        {
-          name: 'machineconfigs',
-          resource: machineconfigs,
         },
       ],
       template: importstr 'espejote-templates/nodedisruptionpolicies-template.jsonnet',

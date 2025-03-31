@@ -178,13 +178,8 @@ spec:
     [ res ]
   triggers:
     - name: machineconfig
-      watchResource:
-        apiVersion: machineconfiguration.openshift.io/v1
-        kind: MachineConfig
-        labelSelector:
-          matchExpressions:
-            - key: machineconfiguration.openshift.io/role
-              operator: Exists
+      watchContextResource:
+        name: machineconfigs
     - name: machineconfiguration/cluster
       watchResource:
         apiVersion: operator.openshift.io/v1
