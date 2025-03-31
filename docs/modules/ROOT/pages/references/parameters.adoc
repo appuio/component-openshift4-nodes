@@ -10,6 +10,21 @@ Values of arrays will be appended to each other.
 There is no way to override values which were set on a lower precedence location.
 ====
 
+== `openshiftVersion`
+
+[horizontal]
+type:: dictionary
+default::
++
+[source,yaml]
+----
+Major: '4'
+Minor: '16'
+----
+
+The OpenShift version of the cluster on which the component is installed.
+We expect that most users will set this parameter to `${dynamic_facts:openshiftVersion}`.
+
 == `availabilityZones`
 
 [horizontal]
@@ -553,6 +568,14 @@ We add special support for defining file contents in the hierarchy with key `sto
 machineConfigs:
   worker-chrony-custom:
     metadata:
+      annotations:
+        openshift4-nodes.syn.tools/node-disruption-policies: |- <1>
+          {
+            "files": [{
+              "path": "/etc/chrony.conf",
+              "actions": [{"type":"Restart","restart":{"serviceName":"chronyd.service"}}]
+            }]
+          }
       labels:
         machineconfiguration.openshift.io/role: worker
     spec:
@@ -578,6 +601,8 @@ machineConfigs:
                   leapsectz right/UTC
                   logdir /var/log/chrony
 ----
+<1> Configure the machine config operator to only restart the `chronyd` service instead of draining and rebooting the node when this `MachineConfig` is applied.
+See section <<_nodedisruptionpolicies,`nodeDisruptionPolicies`>> for a full explanation of how the component supports configuring node disruption policies via annotations on `MachineConfig` resources.
 
 The resulting machine config for this example looks as follows:
 
@@ -739,6 +764,124 @@ For the ConfigMap data shown above the script will configure the following dummy
 
 * `egress_a_0` - `egress_a_31` with IPs 198.51.100.32 - 195.51.100.63 on node infra-foo.
 * `egress_a_0` - `egress_a_31` with IPs 198.51.100.64 - 195.51.100.95 on node infra-bar.
+
+== `nodeDisruptionPolicies`
+
+[horizontal]
+type:: dict
+defaults:: https://github.com/appuio/component-openshift4-nodes/blob/master/class/defaults.yml[See `class/defaults.yml`]
+
+This parameter allows configuring "static" https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html/machine_configuration/machine-config-node-disruption_machine-configs-configure[node disruption policies].
+Node disruption policies allow customizing the actions that are executed when a `MachineConfig` change is applied.
+By default the machine config operator (MCO) will reboot nodes when a `MachineConfig` changes a file or a systemd unit.
+With node disruption policies, which are configured in the global `machineconfigurations.operator.openshift.io/cluster` resource, you can customize the MCO behavior when a file or systemd unit is changed.
+
+The node disruption policies are configured via field `spec.nodeDisruptionPolicy` in the `machineconfiguration.operator.openshift.io/cluster` resource.
+That object has fields `files`, `units` and `sshkey`.
+Field `files` is a list.
+Each entry of `files` has fields `path` and `actions`.
+The list is indexable by field `path` of the entries.
+Field `units` is a list.
+Each entry of `units` has fields `name` and `actions`.
+The list is indexable by field `name` of the entries.
+Field `sshkey` is an object with field `actions`.
+Field `actions` defines the actions to take when the policy matches a change.
+
+TIP: When applying policy actions, the longest prefix wins: if there are policies for both `/usr/local` and `/usr/local/bin` the policy for `/usr/local/bin` is applied for `/usr/local/bin/script.sh`.
+
+TIP: Consult `kubectl explain machineconfiguration.operator.openshift.io.spec.nodeDisruptionPolicy` for a more comprehensive explanation of each field.
+
+Actions are executed in the order that they appear in field `actions`.
+Currently, the following actions are supported:
+
+`Reboot`::
+Drains and reboots the node (the default action).
+Must occur alone.
+
+`None`::
+Does nothing.
+Must occur alone.
+
+`Drain`::
+Cordons, drains and uncordons the node.
+
+`Reload`::
+Reloads a systemd service.
+
+`Restart`::
+Restarts a systemd service.
+
+`DaemonReload`::
+Executes `systemd daemon-reload` to discover new or changed systemd configuration, such as a new systemd unit.
+
+The component expects parameter fields `files` and `units` to be dictionaries and treats the keys as values for field `path` and `name` for the `files` and `units` lists in the `MachineConfiguration` resource respectively.
+The values of each entry in `files` and `units` are used verbatim.
+The content of parameter field `sshkey_actions` is used verbatim as the contents of `sshkey.actions`.
+
+The component has some validation and will reject obviously invalid configurations, such as a list of actions which contains `Reboot` or `None` together with other actions.
+
+The component deploys an Espejote `ManagedResource` which collects node disruption policies from annotation `openshift4-nodes.syn.tools/node-disruption-policies` from all `MachineConfig` resources (except the `rendered-*` resources) and merges those values (which are expected to be string-encoded JSON) with the statically configured policies provided in this parameter.
+The contents of this parameter are deployed on the cluster in an Espejote `JsonnetLibrary` object.
+
+The contents of each annotation are expected to be string-encoded JSON which contains a valid node disruption policy snippet.
+The expected top-level fields of the annotation contents are `files`, `units` or `sshkey`.
+The `ManagedResource` uses the same validation logic as the component to reject obviously invalid configurations provided via annotations.
+
+Since there can only be one policy per file `path` and per systemd unit, the `ManagedResource` will collect each list of `actions` for a given path or unit and select the "most disruptive" list of actions.
+
+`Reboot` is treated as the most disruptive action and has precedence over all other lists of actions.
+`None` is treated as the least disruptive action and all other lists of actions have precedence over `None`.
+Other lists of actions are merged together, since we can't sensibly define an order of precedence for two lists of actions that are composed from the actions other than `None` or `Reboot`.
+
+NOTE: Node disruption policies generally won't have an effect during OpenShift upgrades.
+
+[IMPORTANT]
+====
+We can't guarantee that node disruption policies configured through `MachineConfig` annotations will still be in effect when the changes triggered by the deletion of the `MachineConfig` are rolled out.
+Therefore, we strongly recommend to configure node disruption policies that are intended to prevent machine reboots through the component parameter.
+====
+
+[IMPORTANT]
+====
+We don't recommend configuring node disruption policies which restart systemd services which themselves are deployed via `MachineConfig` objects.
+Such a node disruption policy will cause nodes to become degraded if the `MachineConfig` resource which deploys the service is removed.
+====
+
+=== Example
+
+The following configuration can be used to ensure that managing files in `/usr/local/bin` is fully non-disruptive, as long as no other configurations override this config:
+
+[source,yaml]
+----
+nodeDisruptionPolicies:
+  files:
+    "/usr/local/bin":
+      actions:
+        - None
+----
+
+The following annotations contents can be provided on a `MachineConfig` which configures a custom `/etc/chrony.conf` to just restart the chrony service instead of rebooting the node:
+
+[source,yaml]
+----
+machineConfigs: <1>
+  worker-custom-chrony: <1>
+    metadata:
+      annotations:
+        openshift4-nodes.syn.tools/node-disruption-policies: |- <2>
+          {
+            "files": [{
+              "path": "/etc/chrony.conf",
+              "actions": [{"type":"Restart","restart":{"serviceName":"chronyd.service"}}]
+            }]
+          }
+      labels:
+        machineconfiguration.openshift.io/role: worker
+    spec: { ... }
+----
+<1> We give the example via component parameter `machineConfigs`.
+See section <<_machineconfigs, `machineConfigs`>> for a full example `MachineConfig` which deploys a custom `/etc/chrony.conf`.
+<2> See the https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html/machine_configuration/machine-config-node-disruption_machine-configs-configure#machine-config-node-disruption-config_machine-configs-configure[upstream documentation] for the full set of options.
 
 == `capacityAlerts`
 
