@@ -11,3 +11,13 @@ parameters:
   openshift4_nodes:
     openshiftVersion:
       Minor: '17'
+    nodeDisruptionPolicies:
+      files:
+        '/usr/local/bin':
+          actions:
+            - type: None
+        '/etc/chrony.conf':
+          actions:
+            - type: Restart
+              restart:
+                serviceName: chronyd.service

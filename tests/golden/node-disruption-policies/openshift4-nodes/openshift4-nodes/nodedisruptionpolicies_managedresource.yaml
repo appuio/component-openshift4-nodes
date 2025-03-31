@@ -10,7 +10,25 @@ spec:
     config.json: |-
       {
           "files": [
-
+              {
+                  "actions": [
+                      {
+                          "restart": {
+                              "serviceName": "chronyd.service"
+                          },
+                          "type": "Restart"
+                      }
+                  ],
+                  "path": "/etc/chrony.conf"
+              },
+              {
+                  "actions": [
+                      {
+                          "type": "None"
+                      }
+                  ],
+                  "path": "/usr/local/bin"
+              }
           ],
           "sshkey_actions": [
 

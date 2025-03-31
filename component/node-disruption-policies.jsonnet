@@ -65,16 +65,18 @@ local jsonnetlib =
         'ndp.libsonnet': importstr 'espejote-templates/nodedisruptionpolicy-helpers.libsonnet',
         'config.json': std.manifestJson({
           files: [
-            {
+            ndp_params.files[f] {
               path: f,
-              actions: ndp.select_actions([ ndp_params.files[f] ]),
+            } + {
+              actions: ndp.select_actions([ super.actions ]),
             }
             for f in std.objectFields(ndp_params.files)
           ],
           units: [
-            {
+            ndp_params.units[u] {
               name: u,
-              actions: ndp.select_actions([ ndp_params.units[u] ]),
+            } + {
+              actions: ndp.select_actions([ super.actions ]),
             }
             for u in std.objectFields(ndp_params.units)
           ],
