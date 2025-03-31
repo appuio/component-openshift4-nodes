@@ -90,6 +90,9 @@ parameters:
 
     autoscaling:
       enabled: false
+      addAutoscalerArgs:
+        - --daemonset-eviction-for-occupied-nodes=false
+        - --skip-nodes-with-local-storage=false
       clusterAutoscaler: {}
       machineAutoscalers: {}
       priorityExpanderConfig: {}
