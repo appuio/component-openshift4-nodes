@@ -1,0 +1,12 @@
+apiVersion: config.openshift.io/v1
+kind: Node
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    name: cluster
+  name: cluster
+spec:
+  cgroupMode: v1

@@ -19,5 +19,6 @@ parameters:
           - openshift4-nodes/component/prune-machine-configs.jsonnet
           - openshift4-nodes/component/capacity.jsonnet
           - openshift4-nodes/component/node-disruption-policies.jsonnet
+          - openshift4-nodes/component/service-loadbalancer-default-annotations.jsonnet
         input_type: jsonnet
         output_path: openshift4-nodes/

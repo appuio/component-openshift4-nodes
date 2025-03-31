@@ -91,6 +91,8 @@ parameters:
 
     machineSets: {}
 
+    serviceLoadBalancerDefaultAnnotations: {}
+
     autoscaling:
       enabled: false
       addAutoscalerArgs:

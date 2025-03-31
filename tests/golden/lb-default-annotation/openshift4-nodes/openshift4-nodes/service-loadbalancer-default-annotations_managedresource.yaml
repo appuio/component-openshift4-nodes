@@ -1,0 +1,71 @@
+apiVersion: espejote.io/v1alpha1
+kind: JsonnetLibrary
+metadata:
+  labels:
+    app.kubernetes.io/name: service-loadbalancer-default-annotations
+  name: service-loadbalancer-default-annotations
+  namespace: appuio-openshift4-nodes
+spec:
+  data:
+    annotations.json: |-
+      {
+          "service.beta.kubernetes.io/exoscale-loadbalancer-service-instancepool-id": "7026DCCB-39B4-451B-AB38-EB527CC836A4"
+      }
+---
+apiVersion: espejote.io/v1alpha1
+kind: ManagedResource
+metadata:
+  annotations:
+    syn.tools/description: |
+      This ManagedResource adds default annotations to all services with `spec.type: LoadBalancer`.
+      Annotations are taken from a JsonnetLibrary with the same name.
+      The JsonnetLibrary contains a file `annotations.json` with the annotations to be added.
+      If an annotation is already set on the service, it will not be overridden.
+  labels:
+    app.kubernetes.io/name: service-loadbalancer-default-annotations
+  name: service-loadbalancer-default-annotations
+  namespace: appuio-openshift4-nodes
+spec:
+  context:
+    - name: services
+      resource:
+        apiVersion: v1
+        kind: Service
+        namespace: ''
+  serviceAccountRef:
+    name: service-loadbalancer-default-annotations-manager
+  template: |
+    local esp = import 'espejote.libsonnet';
+    local defaultAnnotations = import 'service-loadbalancer-default-annotations/annotations.json';
+
+    local lbServices = std.filter(
+      function(s) std.get(s.spec, 'type') == 'LoadBalancer',
+      esp.context().services
+    );
+
+    local defaultedAnnotationsForService = function(s) {
+      [if !std.objectHas(std.get(s.metadata, 'annotations', {}), k) then k]: defaultAnnotations[k]
+      for k in std.objectFields(defaultAnnotations)
+    };
+
+    local annotationPatchForService = function(s) {
+      apiVersion: s.apiVersion,
+      kind: s.kind,
+      metadata: {
+        name: s.metadata.name,
+        namespace: s.metadata.namespace,
+        annotations: defaultedAnnotationsForService(s),
+      },
+    };
+
+    std.filter(
+      function(p) p.metadata.annotations != {},
+      std.map(
+        annotationPatchForService,
+        lbServices,
+      ),
+    )
+  triggers:
+    - name: service
+      watchContextResource:
+        name: services

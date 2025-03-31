@@ -1,0 +1,134 @@
+apiVersion: v1
+data:
+  machineconfig_pruning.sh: |
+    #!/bin/bash
+    set -ex
+
+    for pool in $(kubectl get machineconfigpool -ojson | jq -r '.items[].metadata.name'); do
+      oc adm prune renderedmachineconfigs list --pool-name="$pool" |\
+        grep 'in use: false' |\
+        # keep 5 newest mc
+        head -n-5 |\
+        cut -d' ' -f1 |\
+        while read -r mc; do
+          kubectl delete machineconfig "$mc"
+        done
+    done
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels:
+    name: appuio-prune-machineconfigs
+  name: appuio-prune-machineconfigs
+  namespace: openshift-machine-config-operator
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations: {}
+  labels:
+    name: appuio-prune-machineconfigs
+  name: appuio-prune-machineconfigs
+  namespace: openshift-machine-config-operator
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      completions: 1
+      parallelism: 1
+      template:
+        metadata:
+          labels:
+            name: appuio-prune-machineconfigs
+        spec:
+          containers:
+            - args: []
+              command:
+                - /scripts/machineconfig_pruning.sh
+              env:
+                - name: HOME
+                  value: /export
+              image: quay.io/appuio/oc:v4.16
+              imagePullPolicy: IfNotPresent
+              name: prune-machineconfigs
+              ports: []
+              stdin: false
+              tty: false
+              volumeMounts:
+                - mountPath: /export
+                  name: export
+                - mountPath: /scripts
+                  name: scripts
+              workingDir: /export
+          imagePullSecrets: []
+          initContainers: []
+          restartPolicy: OnFailure
+          serviceAccountName: appuio-machineconfig-pruner
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - emptyDir: {}
+              name: export
+            - configMap:
+                defaultMode: 360
+                name: appuio-prune-machineconfigs
+              name: scripts
+  schedule: 0 11 * * 3
+  successfulJobsHistoryLimit: 10
+  timeZone: Europe/Zurich
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations: {}
+  labels:
+    name: appuio-machineconfig-pruner
+  name: appuio:machineconfig-pruner
+rules:
+  - apiGroups:
+      - machineconfiguration.openshift.io
+    resources:
+      - machineconfigs
+    verbs:
+      - get
+      - list
+      - delete
+  - apiGroups:
+      - machineconfiguration.openshift.io
+    resources:
+      - machineconfigpools
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ''
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: appuio-machineconfig-pruner
+  name: appuio:machineconfig-pruner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: appuio:machineconfig-pruner
+subjects:
+  - kind: ServiceAccount
+    name: appuio-machineconfig-pruner
+    namespace: openshift-machine-config-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: appuio-machineconfig-pruner
+  name: appuio-machineconfig-pruner
+  namespace: openshift-machine-config-operator

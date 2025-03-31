@@ -210,6 +210,23 @@ This gives you the full control over the resulting `MachineSet` or `ControlPlane
 Values given here will be merged with precedence with the defaults configured in <<defaultSpec>>.
 The values can be everything that's accepted in the `spec` field of a `machinesets.machine.openshift.io` object.
 
+== `serviceLoadBalancerDefaultAnnotations`
+
+[horizontal]
+type:: dictionary
+default:: `{}`
+example::
++
+[source,yaml]
+----
+serviceLoadBalancerDefaultAnnotations:
+  service.beta.kubernetes.io/exoscale-loadbalancer-service-instancepool-id: 7026DCCB-39B4-451B-AB38-EB527CC836A4
+----
+
+Creates an espejote ManagedResource adding default annotations to Services with `spe.type: LoadBalancer`.
+
+Can be used to inject annotations required for some LoadBalancer implementations.
+
 == `machineSets`
 
 [horizontal]
