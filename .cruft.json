@@ -7,7 +7,7 @@
       "name": "OpenShift 4 Nodes",
       "slug": "openshift4-nodes",
       "parameter_key": "openshift4_nodes",
-      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling capacity node-disruption-policies",
+      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling capacity node-disruption-policies cloudscale",
       "add_lib": "n",
       "add_pp": "n",
       "add_golden": "y",

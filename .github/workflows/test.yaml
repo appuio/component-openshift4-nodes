@@ -41,6 +41,7 @@ jobs:
           - autoscaling
           - capacity
           - node-disruption-policies
+          - cloudscale
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
@@ -64,6 +65,7 @@ jobs:
           - autoscaling
           - capacity
           - node-disruption-policies
+          - cloudscale
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
