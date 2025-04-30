@@ -48,6 +48,7 @@ parameters:
                 tags: []
                 userDataSecret:
                   name: worker-user-data
+      cloudscale: {}
     controlPlaneDefaultSpecs:
       vsphere: {}
       aws: {}
@@ -84,6 +85,7 @@ parameters:
                         - https://www.googleapis.com/auth/cloud-platform
                   userDataSecret:
                     name: master-user-data
+      cloudscale: {}
     nodeConfig:
       cgroupMode: v1
 

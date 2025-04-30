@@ -6,6 +6,7 @@ local inv = kap.inventory();
 local params = inv.parameters.openshift4_nodes;
 
 local isGCP = inv.parameters.facts.cloud == 'gcp';
+local isCloudscale = inv.parameters.facts.cloud == 'cloudscale';
 
 local machineSetSpecs = function(name, set, role)
   kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
@@ -42,15 +43,23 @@ local machineSetSpecs = function(name, set, role)
               [if role != 'worker' then 'node-role.kubernetes.io/' + role]: '',
             },
           },
-          [if isGCP then 'providerSpec']+: {
-            value+: {
-              machineType: set.instanceType,
-              tags: [
-                params.infrastructureID + '-worker',
-              ],
-              zone: params.availabilityZones[0],
-            },
-          },
+          providerSpec+: (
+            if isGCP then {
+              value+: {
+                machineType: set.instanceType,
+                tags: [
+                  params.infrastructureID + '-worker',
+                ],
+                zone: params.availabilityZones[0],
+              },
+            } else {}
+          ) + (
+            if isCloudscale then {
+              value+: {
+                antiAffinityKey: name,
+              },
+            } else {}
+          ) + com.makeMergeable(std.get(set, 'providerSpec', {})),
         },
       },
     },
@@ -91,15 +100,23 @@ local cpMachineSetSpecs = function(set)
             },
           },
           spec+: {
-            [if isGCP then 'providerSpec']+: {
-              value+: {
-                machineType: set.instanceType,
-                tags: [
-                  params.infrastructureID + '-master',
-                ],
-                zone: params.availabilityZones[0],
-              },
-            },
+            providerSpec+: (
+              if isGCP then {
+                value+: {
+                  machineType: set.instanceType,
+                  tags: [
+                    params.infrastructureID + '-master',
+                  ],
+                  zone: params.availabilityZones[0],
+                },
+              } else {}
+            ) + (
+              if isCloudscale then {
+                value+: {
+                  antiAffinityKey: 'master',
+                },
+              } else {}
+            ) + com.makeMergeable(std.get(set, 'providerSpec', {})),
           },
         },
       },
