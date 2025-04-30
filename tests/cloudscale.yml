@@ -1,3 +1,47 @@
-# Overwrite parameters here
+parameters:
+  openshift:
+    baseDomain: my.base.domain
+    cloudscale:
+      worker_flavor: plus-16-4
+      infra_flavor: plus-16-4
+      subnet_uuid: some_subnet_uuid_here
+      rhcos_image_slug: rhcos-4.17
+  facts:
+    cloud: cloudscale
+    region: lpg
+  openshift4_nodes:
+    defaultSpecs:
+      cloudscale:
+        template:
+          spec:
+            metadata:
+              labels:
+                syn.tools/cluster-id: ${cluster:name}
+            providerSpec:
+              value:
+                image: 'custom:${openshift:cloudscale:rhcos_image_slug}'
+                interfaces:
+                  - addresses:
+                      - subnetUUID: '${openshift:cloudscale:subnet_uuid}'
+                    type: Private
+                zone: '${facts:region}1'
+                baseDomain: ${openshift:baseDomain}
+                flavor: '${openshift:cloudscale:worker_flavor}'
+                rootVolumeSizeGB: 100
+                tokenSecret:
+                  name: cloudscale-rw-token
+                userDataSecret:
+                  name: cloudscale-user-data
 
-# parameters: {...}
+    projectName: cluster-test
+    infrastructureID: ${cluster:name}
+
+    nodeGroups:
+      worker:
+        role: app
+        replicas: 3
+      infra:
+        replicas: 4
+        providerSpec:
+          value:
+            test: foo
