@@ -42,6 +42,11 @@ parameters:
         replicas: 3
       infra:
         replicas: 4
-        providerSpec:
-          value:
-            test: foo
+        template:
+          spec:
+            metadata:
+              labels:
+                foo: bar
+            providerSpec:
+              value:
+                test: foo

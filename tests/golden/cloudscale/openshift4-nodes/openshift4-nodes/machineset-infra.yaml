@@ -23,6 +23,7 @@ spec:
     spec:
       metadata:
         labels:
+          foo: bar
           node-role.kubernetes.io/infra: ''
           node-role.kubernetes.io/worker: ''
           syn.tools/cluster-id: c-green-test-1234

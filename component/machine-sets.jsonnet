@@ -59,9 +59,9 @@ local machineSetSpecs = function(name, set, role)
                 antiAffinityKey: name,
               },
             } else {}
-          ) + com.makeMergeable(std.get(set, 'providerSpec', {})),
+          ),
         },
-      },
+      } + com.makeMergeable(std.get(set, 'template', {})),
     },
   };
 
@@ -116,10 +116,10 @@ local cpMachineSetSpecs = function(set)
                   antiAffinityKey: 'master',
                 },
               } else {}
-            ) + com.makeMergeable(std.get(set, 'providerSpec', {})),
+            ),
           },
         },
-      },
+      } + com.makeMergeable(std.get(set, 'template', {})),
     },
   };
 
