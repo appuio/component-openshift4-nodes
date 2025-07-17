@@ -206,6 +206,9 @@ local exprMap = {
   [if params.capacityAlerts.enabled then 'capacity_alerting_rules']: prom.PrometheusRule('openshift4-nodes-capacity') {
     metadata+: {
       annotations+: defaultAnnotations,
+      labels+: {
+        'espejote.io/ignore': '',
+      },
       namespace: inv.parameters.openshift4_monitoring.namespace,
     },
     spec+: {
