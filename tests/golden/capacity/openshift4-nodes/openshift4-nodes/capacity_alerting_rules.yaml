@@ -4,6 +4,7 @@ metadata:
   annotations:
     syn_component: openshift4-nodes
   labels:
+    espejote.io/ignore: ''
     name: openshift4-nodes-capacity
   name: openshift4-nodes-capacity
   namespace: foo
