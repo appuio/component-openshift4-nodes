@@ -1,0 +1,51 @@
+parameters:
+  openshift:
+    baseDomain: my.base.domain
+    infraID: ${cluster:name}-ohgh7
+    openstack:
+      worker_flavor: 4C16GB
+      infra_flavor: 4C16GB
+  facts:
+    cloud: openstack
+
+  openshift4_nodes:
+    defaultSpecs:
+      openstack:
+        template:
+          spec:
+            providerSpec:
+              value:
+                cloudName: openstack
+                cloudsSecret:
+                  name: openstack-cloud-credentials
+                  namespace: openshift-machine-api
+                networks:
+                  - filter: {}
+                    subnets:
+                      - filter:
+                          tags: openshiftClusterID=${openshift:infraID}
+                rootVolume:
+                  diskSize: 100
+                  sourceUUID: ${openshift:infraID}-rhcos
+                  volumeType: __DEFAULT__
+                securityGroups:
+                  - filter: {}
+                    name: ${openshift:infraID}-worker
+                serverMetadata:
+                  openshiftClusterID: ${openshift:infraID}
+                tags:
+                  - openshiftClusterID=${openshift:infraID}
+                userDataSecret:
+                  name: worker-user-data
+    projectName: cluster-test
+    infrastructureID: ${cluster:name}
+
+    nodeGroups:
+      worker:
+        role: app
+        replicas: 3
+      infra:
+        replicas: 4
+        providerSpec:
+          value:
+            test: foo
