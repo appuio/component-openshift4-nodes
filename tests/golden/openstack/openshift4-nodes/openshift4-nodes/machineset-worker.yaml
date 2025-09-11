@@ -33,6 +33,7 @@ spec:
             namespace: openshift-machine-api
           networks:
             - filter: {}
+              portSecurity: false
               subnets:
                 - filter:
                     tags: openshiftClusterID=c-green-test-1234-ohgh7

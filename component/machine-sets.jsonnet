@@ -7,6 +7,7 @@ local params = inv.parameters.openshift4_nodes;
 
 local isGCP = inv.parameters.facts.cloud == 'gcp';
 local isCloudscale = inv.parameters.facts.cloud == 'cloudscale';
+local isOpenstack = inv.parameters.facts.cloud == 'openstack';
 
 local machineSetSpecs = function(name, set, role)
   kube._Object('machine.openshift.io/v1beta1', 'MachineSet', name) {
@@ -59,6 +60,18 @@ local machineSetSpecs = function(name, set, role)
                 antiAffinityKey: name,
               },
             } else {}
+          ) + (
+            if isOpenstack && std.objectHas(set, 'portSecurity') then {
+              value+: {
+                networks: [
+                  n {
+                    portSecurity: set.portSecurity,
+                  }
+                  for n in super.networks
+                ],
+              },
+            }
+            else {}
           ) + com.makeMergeable(std.get(set, 'providerSpec', {})),
         },
       },

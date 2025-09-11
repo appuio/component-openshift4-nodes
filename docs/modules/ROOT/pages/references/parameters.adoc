@@ -200,6 +200,31 @@ When `role` is set to `master`, the component will create a `ControlPlaneMachine
 In order to add additional labels to the resulting Node object, use `spec.template.spec.metadata.labels`.
 ====
 
+=== `portSecurity`
+
+[horizontal]
+type:: boolean
+default:: _unset_
+
+This parameter allows users to selectively configure port security for networks that are attached to the node group in the `defaultSpecs.openstack` config.
+This parameter has no effect for networks which are defined directly through the node group's `spec` parameter.
+
+If this parameter isn't given the OpenStack platform's default value is used.
+
+When port security is disabled, nodes in the group are fully accessible in each network they're attached to.
+
+[NOTE]
+====
+This parameter is only supported on OpenStack.
+Other infrastructures don't provide the same port security concept.
+====
+
+[TIP]
+====
+On OpenStack platforms which enable security groups (and port security) by default, this parameter must be set to `false` on node groups whose nodes are matched by one or more `CiliumL2AnnouncementPolicy` resources.
+This is necessary because the OpenStack platform won't forward ARP replies for arbitrary IPs that are sent by nodes in the node group when port security is active.
+====
+
 === `spec`
 
 [horizontal]

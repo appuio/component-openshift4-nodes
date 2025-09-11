@@ -44,6 +44,7 @@ parameters:
       worker:
         role: app
         replicas: 3
+        portSecurity: false
       infra:
         replicas: 4
         providerSpec:
