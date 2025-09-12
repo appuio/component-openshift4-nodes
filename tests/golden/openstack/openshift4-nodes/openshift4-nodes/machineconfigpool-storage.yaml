@@ -1,0 +1,23 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/component: openshift4-nodes
+    app.kubernetes.io/managed-by: commodore
+    app.kubernetes.io/name: openshift4-nodes
+    name: x-storage
+    pools.operator.machineconfiguration.openshift.io/storage: ''
+  name: x-storage
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - key: machineconfiguration.openshift.io/role
+        operator: In
+        values:
+          - worker
+          - x-storage
+          - storage
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/storage: ''

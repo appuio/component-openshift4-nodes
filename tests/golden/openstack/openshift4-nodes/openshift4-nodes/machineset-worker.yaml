@@ -1,0 +1,52 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  annotations: {}
+  labels:
+    machine.openshift.io/cluster-api-cluster: c-green-test-1234
+    name: worker
+  name: worker
+  namespace: openshift-machine-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: c-green-test-1234
+      machine.openshift.io/cluster-api-machineset: worker
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: c-green-test-1234
+        machine.openshift.io/cluster-api-machine-role: app
+        machine.openshift.io/cluster-api-machine-type: app
+        machine.openshift.io/cluster-api-machineset: worker
+    spec:
+      metadata:
+        labels:
+          node-role.kubernetes.io/app: ''
+          node-role.kubernetes.io/worker: ''
+      providerSpec:
+        value:
+          cloudName: openstack
+          cloudsSecret:
+            name: openstack-cloud-credentials
+            namespace: openshift-machine-api
+          networks:
+            - filter: {}
+              portSecurity: false
+              subnets:
+                - filter:
+                    tags: openshiftClusterID=c-green-test-1234-ohgh7
+          rootVolume:
+            diskSize: 100
+            sourceUUID: c-green-test-1234-ohgh7-rhcos
+            volumeType: __DEFAULT__
+          securityGroups:
+            - filter: {}
+              name: c-green-test-1234-ohgh7-worker
+          serverMetadata:
+            openshiftClusterID: c-green-test-1234-ohgh7
+          tags:
+            - openshiftClusterID=c-green-test-1234-ohgh7
+          userDataSecret:
+            name: worker-user-data
