@@ -15,3 +15,11 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - machine.openshift.io
+    resources:
+      - controlplanemachinesets
+    verbs:
+      - get
+      - list
+      - watch

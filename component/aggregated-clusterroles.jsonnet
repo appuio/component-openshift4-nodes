@@ -18,6 +18,15 @@ local kube = import 'lib/kube.libjsonnet';
             'watch',
           ],
         },
+        {
+          apiGroups: [ 'machine.openshift.io' ],
+          resources: [ 'controlplanemachinesets' ],
+          verbs: [
+            'get',
+            'list',
+            'watch',
+          ],
+        },
       ],
     },
   ],
