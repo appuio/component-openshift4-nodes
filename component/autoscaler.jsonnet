@@ -288,6 +288,50 @@ local scheduledDownscalerCronJob(name, schedule, timeZone, enabled) = kube.CronJ
 local enableDownscalerCronJob = scheduledDownscalerCronJob('enable', params.autoscaling.schedule.enableExpression, params.autoscaling.schedule.timeZone, true);
 local disableDownscalerCronJob = scheduledDownscalerCronJob('disable', params.autoscaling.schedule.disableExpression, params.autoscaling.schedule.timeZone, false);
 
+// Deploy missing 4.19 autoscaler RBAC
+local extraRBAC = [
+  {
+    apiVersion: 'rbac.authorization.k8s.io/v1',
+    kind: 'ClusterRole',
+    metadata: {
+      name: 'syn:cluster-autoscaler:volumeattachments',
+    },
+    rules: [
+      {
+        apiGroups: [
+          'storage.k8s.io',
+        ],
+        resources: [
+          'volumeattachments',
+        ],
+        verbs: [
+          'get',
+          'list',
+          'watch',
+        ],
+      },
+    ],
+  },
+  {
+    apiVersion: 'rbac.authorization.k8s.io/v1',
+    kind: 'ClusterRoleBinding',
+    metadata: {
+      name: 'syn:cluster-autoscaler:volumeattachments',
+    },
+    roleRef: {
+      kind: 'ClusterRole',
+      name: 'syn:cluster-autoscaler:volumeattachments',
+    },
+    subjects: [
+      {
+        kind: 'ServiceAccount',
+        name: 'cluster-autoscaler',
+        namespace: 'openshift-machine-api',
+      },
+    ],
+  },
+];
+
 if params.autoscaling.enabled then
   {
     cluster_autoscaler:
@@ -299,6 +343,7 @@ if params.autoscaling.enabled then
         )
       else
         clusterAutoscaler,
+    extra_rbac: extraRBAC,
     [if std.length(machineAutoscalers) > 0 then
       'machine_autoscalers']: machineAutoscalers,
     [if priorityExpanderConfigmap != null then
