@@ -5,6 +5,8 @@ local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
 
+local cluster_id = inv.parameters.cluster.name;
+
 local isGCP = inv.parameters.facts.cloud == 'gcp';
 local isCloudscale = inv.parameters.facts.cloud == 'cloudscale';
 local isOpenstack = inv.parameters.facts.cloud == 'openstack';
@@ -57,7 +59,7 @@ local machineSetSpecs = function(name, set, role)
           ) + (
             if isCloudscale then {
               value+: {
-                antiAffinityKey: name,
+                antiAffinityKey: '%s_%s' % [ cluster_id, name ],
               },
             } else {}
           ) + (
