@@ -28,7 +28,7 @@ spec:
           syn.tools/cluster-id: c-green-test-1234
       providerSpec:
         value:
-          antiAffinityKey: infra
+          antiAffinityKey: c-green-test-1234_infra
           baseDomain: my.base.domain
           flavor: plus-16-4
           image: custom:rhcos-4.17
