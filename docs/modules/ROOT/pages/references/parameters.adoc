@@ -940,17 +940,19 @@ Example:
 capacityAlerts:
   enabled: true <1>
   groupByNodeLabels: [] <2>
-  monitorNodeRoles:
-   - app <3>
+  monitorMachineSets:
+   - app.* <3>
+  aggregateMachineSets:
+    app: app.* <4>
   groups:
     PodCapacity:
       rules:
         TooManyPods:
           annotations:
-            message: 'The number of pods is too damn high' <4>
-          for: 3h <5>
+            message: 'The number of pods is too damn high' <5>
+          for: 3h <6>
         ExpectTooManyPods:
-          expr: <6>
+          expr: <7>
             range: '2d'
             predict: '5*24*60*60'
 
@@ -959,27 +961,30 @@ capacityAlerts:
         TooMuchMemoryRequested:
           enabled: true
           expr:
-            raw: sum(kube_pod_resource_request{resource="memory"}) > 9000*1024*1024*1024 <7>
+            raw: sum(kube_pod_resource_request{resource="memory"}) > 9000*1024*1024*1024 <8>
     CpuCapacity:
       rules:
         ClusterCpuUsageHigh:
-          enabled: false <8>
+          enabled: false <9>
         ExpectClusterCpuUsageHigh:
-          enabled: false <8>
+          enabled: false <9>
     UnusedCapacity:
       rules:
         ClusterHasUnusedNodes:
-          enabled: false <9>
+          enabled: false <10>
 ----
 <1> Enables capacity alerts
 <2> List of node labels (as they show up in the `kube_node_labels` metric) by which alerts are grouped (only available if machineSets are not in use)
-<3> List of node roles to monitor. This is used only if machineSets are not in use. If machineSets are used, the parameter `monitorMachineSets` is used instead.
-<4> Changes the alert message for the pod capacity alert
-<5> Only alerts for pod capacity if it fires for 3 hours
-<6> Change the pod count prediction to look at the last two days and predict the value in five days
-<7> Completely overrides the default alert rule and alerts if the total memory request is over 9000 GB
-<8> Disables both CPU capacity alert rules
-<9> Disables alert if the cluster has unused nodes.
+<3> List of machinesets to monitor. This is used only if machineSets are in use. If machineSets are not used, the parameter `monitorNodeRoles` is used instead.
+<4> Dictionary of aggregated machine sets. The key is the name that should be given to the aggregated machine set. The value is a regular expression matching all machinesets that should be aggregated into this value.
+If multiple aggregations are provided, they must be disjoint.
+It is possible to use substitutions in the key, such as `'$1': (.+)-.+` - this would result in all machinesets being aggregated according to their name split at the first dash.
+<5> Changes the alert message for the pod capacity alert
+<6> Only alerts for pod capacity if it fires for 3 hours
+<7> Change the pod count prediction to look at the last two days and predict the value in five days
+<8> Completely overrides the default alert rule and alerts if the total memory request is over 9000 GB
+<9> Disables both CPU capacity alert rules
+<10> Disables alert if the cluster has unused nodes.
 
 
 == Example

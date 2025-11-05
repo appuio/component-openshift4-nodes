@@ -154,6 +154,7 @@ parameters:
         - app
       monitorMachineSets:
         - worker
+      aggregateMachineSets: {}
       groupByNodeLabels: []
       groups:
         NodesPodCapacity:
