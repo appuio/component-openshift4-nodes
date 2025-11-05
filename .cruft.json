@@ -1,13 +1,13 @@
 {
   "template": "https://github.com/projectsyn/commodore-component-template.git",
-  "commit": "8f2273cd8ab13c55eb0f6dd621c70c4c9e4786fd",
+  "commit": "84a7c63ca26492da555344c23ccddac302ba0bb2",
   "checkout": "main",
   "context": {
     "cookiecutter": {
       "name": "OpenShift 4 Nodes",
       "slug": "openshift4-nodes",
       "parameter_key": "openshift4_nodes",
-      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling capacity node-disruption-policies cloudscale openstack",
+      "test_cases": "defaults gcp maxpods pidslimit machineconfig remove-machineconfigpool autoscaling capacity node-disruption-policies cloudscale openstack autoscaling-scheduled",
       "add_lib": "n",
       "add_pp": "n",
       "add_golden": "y",
@@ -25,7 +25,7 @@
       "github_name": "component-openshift4-nodes",
       "github_url": "https://github.com/appuio/component-openshift4-nodes",
       "_template": "https://github.com/projectsyn/commodore-component-template.git",
-      "_commit": "8f2273cd8ab13c55eb0f6dd621c70c4c9e4786fd"
+      "_commit": "84a7c63ca26492da555344c23ccddac302ba0bb2"
     }
   },
   "directory": null

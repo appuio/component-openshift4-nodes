@@ -43,6 +43,7 @@ jobs:
           - node-disruption-policies
           - cloudscale
           - openstack
+          - autoscaling-scheduled
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
@@ -68,6 +69,7 @@ jobs:
           - node-disruption-policies
           - cloudscale
           - openstack
+          - autoscaling-scheduled
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}
