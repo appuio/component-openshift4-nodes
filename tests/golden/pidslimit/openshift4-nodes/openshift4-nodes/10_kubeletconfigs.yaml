@@ -10,9 +10,9 @@ metadata:
   name: workers
 spec:
   kubeletConfig:
-    maxPods: 110
+    maxPods: 250
     podPidsLimit: 2048
   machineConfigPoolSelector:
     matchExpressions:
-      - key: pools.operator.machineconfiguration.openshift.io/worker
-        operator: Exists
+      - key: pools.operator.machineconfiguration.openshift.io/master
+        operator: DoesNotExist

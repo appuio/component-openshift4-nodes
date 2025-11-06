@@ -11,12 +11,12 @@ local params = inv.parameters.openshift4_nodes;
 local checkMaxPods(config) =
   if
     std.objectHas(config.kubeletConfig, 'maxPods')
-    && config.kubeletConfig.maxPods > 110
+    && config.kubeletConfig.maxPods > 250
   then
     config {
       kubeletConfig+: {
         maxPods: std.trace(
-          '[WARNING] Upstream Kubernetes recommends to have maximum pods per node <= 110.',
+          '[WARNING] Upstream OpenShift recommends to have maximum pods per node <= 250.',
           config.kubeletConfig.maxPods
         ),
       },

@@ -15,5 +15,5 @@ spec:
       memory: 2Gi
   machineConfigPoolSelector:
     matchExpressions:
-      - key: pools.operator.machineconfiguration.openshift.io/worker
-        operator: Exists
+      - key: pools.operator.machineconfiguration.openshift.io/master
+        operator: DoesNotExist
