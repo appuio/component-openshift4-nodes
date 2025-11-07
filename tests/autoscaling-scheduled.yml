@@ -70,5 +70,9 @@ parameters:
     capacityAlerts:
       enabled: true
       monitorMachineSets:
-        - app
+        - app.*
+        - infra.*
         - ~worker
+      relabelMachineSets:
+        app: app.*
+        infra: infra.*

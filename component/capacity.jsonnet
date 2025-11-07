@@ -34,8 +34,28 @@ local predict(indicator, range='1d', resolution='5m', predict='3*24*60*60') =
   'predict_linear(avg_over_time(%(indicator)s[%(range)s:%(resolution)s])[%(range)s:%(resolution)s], %(predict)s)' %
   { indicator: indicator, range: range, resolution: resolution, predict: predict };
 
+local _surroundWithRelabel(metric, relabelObj) =
+  'label_replace(%(metric)s, "%(targetLabel)s", "%(targetValue)s", "%(sourceLabel)s", "%(sourceValue)s")' % {
+    metric: metric,
+    sourceLabel: relabelObj.sourceLabel,
+    sourceValue: relabelObj.sourceValue,
+    targetLabel: relabelObj.targetLabel,
+    targetValue: relabelObj.targetValue,
+  };
+
+local relabelMachineSets(metric) =
+  // Changes the `machineset` label on the given metric, modifying the values as per `params.capacityAlerts.aggregateMachineSets`.
+  std.foldl(
+    _surroundWithRelabel,
+    std.map(
+      (function(it) { sourceLabel: 'machineset', sourceValue: it.value, targetLabel: 'machineset', targetValue: it.key }),
+      std.objectKeysValues(params.capacityAlerts.aggregateMachineSets),
+    ),
+    metric
+  );
 
 local addNodeLabels(metric) =
+  // Joins a metric with `kube_node_labels`, but only if node labels are actually of interest (i.e. we wish to aggregate by labels later on)
   if std.length(byLabels) > 0 then
     '%(metric)s * on(node) group_left(%(labelList)s) kube_node_labels' %
     { metric: metric, labelList: std.join(', ', byLabels) }
@@ -43,10 +63,17 @@ local addNodeLabels(metric) =
     metric;
 
 local addMachineSets(metric) =
-  '%(metric)s * on(node) group_left(%(labelList)s) label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")' %
-  { metric: metric, labelList: 'machineset' };
+  // Joins a metric with `openshift_upgrade_controller_machine_info`, taking into account any renaming/aggregating of machinesets that is desired.
+  '%(metric)s * on(node) group_left(%(labelList)s) %(machinesetQuery)s' %
+  {
+    metric: metric,
+    labelList: 'machineset',
+    machinesetQuery: relabelMachineSets('label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")'),
+  };
 
 local renameNodeLabel(expression, nodeLabel) =
+  // Surrounds the `expression` promql with a label_replace that renames the given `nodeLabel` to "node".
+  // If the `nodeLabel` is already "node", return `expression` unchanged.
   if nodeLabel == 'node' then
     expression
   else
@@ -54,23 +81,30 @@ local renameNodeLabel(expression, nodeLabel) =
     { expression: expression, nodeLabel: nodeLabel };
 
 local filterWorkerNodesByMachineSet(metric, machineSetFilter=machineSetFilter, nodeLabel='node') =
-  '%(metric)s * on(node) group_left(machineset) label_replace(openshift_upgrade_controller_machine_info{machineset=~"%(machineSetFilter)s"}, "node", "$1", "node_ref", "(.+)")' %
-  { metric: renameNodeLabel(metric, nodeLabel), nodeLabel: nodeLabel, machineSetFilter: machineSetFilter }
-;
+  // Given a metric that has a node label, join it with machineset information and return only those timeseries pertaining to machinesets we're interested in.
+  '%(metric)s * on(node) group_left(%(labelList)s) %(machinesetQuery)s' %
+  {
+    metric: renameNodeLabel(metric, nodeLabel),
+    labelList: 'machineset',
+    machinesetQuery: relabelMachineSets('label_replace(openshift_upgrade_controller_machine_info{machineset=~"%(machineSetFilter)s"}, "node", "$1", "node_ref", "(.+)")' % { machineSetFilter: machineSetFilter }),
+  };
 
 local filterWorkerNodesByRole(metric, workerRole=nodeRoleFilter, nodeLabel='node') =
+  // Given a metric that has a node label, join it with node role information and return only those timeseries pertaining to node roles we're interested in.
   addNodeLabels(
     '%(metric)s * on(node) group_left kube_node_role{role=~"%(workerRole)s"}' %
     { metric: renameNodeLabel(metric, nodeLabel), nodeLabel: nodeLabel, workerRole: workerRole }
   );
 
 local filterWorkerNodes(metric, workerIdentifier='', nodeLabel='node') =
+  // Given a metric that has a node label, filter out only those timeseries we're interested in. (e.g. specific machinesets or specific node roles)
   if useMachineSets then
     filterWorkerNodesByMachineSet(metric, (if workerIdentifier != '' then workerIdentifier else machineSetFilter), nodeLabel)
   else
     filterWorkerNodesByRole(metric, (if workerIdentifier != '' then workerIdentifier else nodeRoleFilter), nodeLabel);
 
 local aggregate(expression, aggregator='sum') =
+  // Aggregates a metric, automatically inserting `by X` expressions as configured. (e.g. sum by machineset or sum by node labels)
   if useMachineSets then
     '%(aggregator)s by (machineset) (%(expression)s)' %
     { expression: expression, aggregator: aggregator }
@@ -83,6 +117,8 @@ local aggregate(expression, aggregator='sum') =
       { expression: expression, aggregator: aggregator };
 
 local maxPerNode(resource) =
+  // Given a resource metric, find the node that has the maximum of the given resource within each interesting category (e.g. per machineset or per node role)
+  // Useful for capacity metrics such as "allocatable memory", to answer the question "how much allocatable memory per node do I get in this node role / machineset, assuming the nodes are all the same?"
   if useMachineSets then
     aggregate(addMachineSets(resource), aggregator='max')
   else
@@ -94,14 +130,32 @@ local maxPerNode(resource) =
     );
 
 local adjustForAutoScaling(freeResourceMetric, capacityPerNode, nodeLabel='node', direction='max') =
+  // Given a "amount of resource available on cluster" style metric, and a "resource capacity on one node" style metric, figure out how much of that resource would be free if, hypothetically, the cluster were autoscaled to maximum capacity.
+  // Basic formula: "Hypothetical free resources" = "Current free resources" + ("Maximum hypothetical node count" - "current node count") * "Resource capacity on one node"
+  // If direction is `min`, instead returns "how much of that resource would be free if, hypothetically, the cluster were autoscaled to minimum capacity" - this can be negative. (Useful for figuring out whether the cluster minimum size is too big.)
+
+  // If the cluster has no autoscaling, then the original `freeResourceMetric` is returned unmodified.
+
   if useMachineSets then
     if hasAutoScaling then
-      local currentNodeCountMetric = 'mapi_machine_set_status_replicas_ready';
-      local machinesetMaxSize = 'max by(machineset) (component_openshift4_nodes_machineset_replicas_max or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
-      local machinesetMinSize = 'min by(machineset) (component_openshift4_nodes_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
-      local currentNodeCountMetric = 'label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")';
+      local currentNodeCountMetricBase = 'label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")';
+      local machinesetMaxSizeBase = 'max by(machineset) (component_openshift4_nodes_machineset_replicas_max or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+      local machinesetMinSizeBase = 'min by(machineset) (component_openshift4_nodes_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+
+      // NOTE(aa): When we're aggregating multiple actual machinesets together, we later on change the label values on the result of the above query. (e.g. change all machinesets `app-.*` to `app`)
+      //           That leads to duplicate label sets - to avoid this, we need a version of this query that has another label which can stay unique.
+      //           The below "DualLabel" variant of the above query keeps the original "name" label with the same value as "machineset". In a later aggregation this label disappears again.
+      local machinesetMaxSizeDualLabel = 'max by(machineset, name) (label_replace(component_openshift4_nodes_machineset_replicas_max, "name", "$1", "machineset", "(.+)") or on(machineset, name) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+      local machinesetMinSizeDualLabel = 'min by(machineset, name) (label_replace(component_openshift4_nodes_machineset_replicas_min, "name", "$1", "machineset", "(.+)") or on(machineset, name) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+
+      // If we're trying to aggregate multiple actual machinesets, sum up their maxima/minima - otherwise return the base query.
+      local machinesetMaxSizeAggregated = if std.length(params.capacityAlerts.aggregateMachineSets) == 0 then machinesetMaxSizeBase else ('sum by (machineset) (%(relabeled)s)' % { relabeled: relabelMachineSets(machinesetMaxSizeDualLabel) });
+      local machinesetMinSizeAggregated = if std.length(params.capacityAlerts.aggregateMachineSets) == 0 then machinesetMinSizeBase else ('sum by (machineset) (%(relabeled)s)' % { relabeled: relabelMachineSets(machinesetMinSizeDualLabel) });
+      local currentNodeCountMetricAggregated = if std.length(params.capacityAlerts.aggregateMachineSets) == 0 then currentNodeCountMetricBase else 'sum by (machineset) (%(relabeled)s)' % { relabeled: relabelMachineSets(currentNodeCountMetricBase) };
+
+      // Return combined formula
       '%(metric)s + on(machineset) (%(minOrMax)s - on(machineset) %(currentNodeCount)s) * on(machineset) %(capacityPerNode)s' %
-      { metric: freeResourceMetric, nodeLabel: nodeLabel, minOrMax: if direction == 'max' then machinesetMaxSize else machinesetMinSize, currentNodeCount: currentNodeCountMetric, capacityPerNode: capacityPerNode }
+      { metric: freeResourceMetric, nodeLabel: nodeLabel, minOrMax: if direction == 'max' then machinesetMaxSizeAggregated else machinesetMinSizeAggregated, currentNodeCount: currentNodeCountMetricAggregated, capacityPerNode: capacityPerNode }
     else
       freeResourceMetric
   else
