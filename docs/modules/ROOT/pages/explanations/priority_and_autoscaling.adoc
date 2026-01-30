@@ -1,0 +1,19 @@
+= Pod Priority and Autoscaling
+
+This component can enable autoscaling behaviour for a cluster.
+If a cluster uses PriorityClass objects to affect pod scheduling and eviction, it is important to know how these two systems interact.
+
+== Preventing Autoscaling
+By default, the `ClusterAutoscaler` defines a `spec.podPriorityThreshold` of `-10`.
+Pods with a priority less than this threshold will not trigger scale-ups (if the cluster has no capacity, they will simply not be scheduleable), and they also don't prevent scale-downs (the pods will get evicted if that allows the cluster to scale down).
+
+Pods with a priority equal or greater than the threshold will be treated normally - the cluster will expand to ensure they can be scheduled, and they will not be preempted to shrink the cluster.
+The same also holds for pods without priority.
+
+For further information, see the https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#how-does-cluster-autoscaler-work-with-pod-priority-and-preemption[Kubernetes autoscaler FAQ].
+
+[NOTE]
+====
+Changing the default `podPriorityThreshold` of `-10` is discouraged.
+For that reason, the value is not configurable via this component's parameters.
+====

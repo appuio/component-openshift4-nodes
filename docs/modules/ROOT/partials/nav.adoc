@@ -3,3 +3,4 @@
 * Explanations
 ** xref:explanations/machine-config-pool.adoc[Machine Config Pools]
 ** xref:explanations/resource_management.adoc[Resource Management]
+** xref:explanations/priority_and_autoscaling.adoc[Pod Priority and Autoscaling]
