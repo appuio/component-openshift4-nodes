@@ -49,7 +49,7 @@ spec:
               env:
                 - name: HOME
                   value: /export
-              image: quay.io/appuio/oc:v4.16
+              image: quay.io/appuio/oc:v4.20
               imagePullPolicy: IfNotPresent
               name: prune-machineconfigs
               ports: []
