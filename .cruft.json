@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/projectsyn/commodore-component-template.git",
-  "commit": "84a7c63ca26492da555344c23ccddac302ba0bb2",
+  "commit": "7e46facc758385bc32eeecab92b4639c66fd4e4f",
   "checkout": "main",
   "context": {
     "cookiecutter": {
@@ -17,7 +17,7 @@
       "automerge_patch_v0": "n",
       "automerge_patch_regexp_blocklist": "",
       "automerge_patch_v0_regexp_allowlist": "",
-      "automerge_minor_regexp_allowlist": "",
+      "automerge_minor_regexp_allowlist": ".*",
       "auto_release": "y",
       "copyright_holder": "VSHN AG <info@vshn.ch>",
       "copyright_year": "2021",
@@ -25,7 +25,7 @@
       "github_name": "component-openshift4-nodes",
       "github_url": "https://github.com/appuio/component-openshift4-nodes",
       "_template": "https://github.com/projectsyn/commodore-component-template.git",
-      "_commit": "84a7c63ca26492da555344c23ccddac302ba0bb2"
+      "_commit": "7e46facc758385bc32eeecab92b4639c66fd4e4f"
     }
   },
   "directory": null
