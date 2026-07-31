@@ -54,9 +54,9 @@ local pruneScript = kube.ConfigMap('appuio-prune-machineconfigs') + namespace {
 local pruneCronJob = kube.CronJob('appuio-prune-machineconfigs') + namespace {
   spec+: {
     failedJobsHistoryLimit: 3,
-    // Wednesdays at 11:00
-    schedule: '0 11 * * 3',
-    timeZone: 'Europe/Zurich',
+    schedule: params.machineConfigPruning.schedule,
+    suspend: params.machineConfigPruning.suspend,
+    timeZone: params.machineConfigPruning.timeZone,
     jobTemplate+: {
       spec+: {
         template+: {

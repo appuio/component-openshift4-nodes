@@ -685,6 +685,14 @@ Keep in mind that machine config objects are evaluated in order of their name.
 This is also the reason why the machine config names are prefixed with `99x-` so that they're evaluated after the default OpenShift machine configuration.
 ====
 
+== `machineConfigPruning`
+
+[horizontal]
+type:: dict
+default:: See `class/defaults.yml`
+
+This paramter allows to configure a CronJob that regularly prunes old, unused MachineConfigs, so they don't accumulate endlessly on a cluster.
+
 == `containerRuntimeConfigs`
 
 [horizontal]

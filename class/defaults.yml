@@ -117,6 +117,11 @@ parameters:
       storage: {}
 
     machineConfigs: {}
+    machineConfigPruning:
+      schedule: '0 11 * * 3'
+      suspend: false
+      timeZone: 'Europe/Zurich'
+
     containerRuntimeConfigs: {}
     kubeletConfigs:
       workers:
