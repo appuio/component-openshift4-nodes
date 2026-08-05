@@ -11,7 +11,8 @@ local params = inv.parameters.openshift4_nodes;
 local mergedConfigs = machineConfigPools.MachineConfigs + com.makeMergeable(params.machineConfigs);
 
 local machineConfigs = [
-  if std.objectHas(mc.spec.config, 'storage') &&
+  if std.objectHas(mc.spec, 'config') &&
+     std.objectHas(mc.spec.config, 'storage') &&
      std.objectHas(mc.spec.config.storage, 'files') then
     local inline_files = std.filter(
       function(f) std.objectHas(f.contents, 'inline'),
