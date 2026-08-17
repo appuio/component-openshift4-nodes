@@ -431,6 +431,7 @@ type:: bool
 default:: `false`
 
 Whether to enable scheduled downscaling.
+Make sure `autoscaling.ignoreDownscalingSync` is set to true when using the scheduled downscaling.
 
 === `autoscaling.schedule.enableExpression`
 
@@ -463,6 +464,7 @@ type:: bool
 default:: `false`
 
 Whether to enable upgradejobhooks that enable downscaling during the maintenance.
+Make sure `autoscaling.ignoreDownscalingSync` is set to true when using the downscaling upgradejobhooks.
 
 === `autoscaling.upgradejobhooks.upgrade_job_selector`
 
