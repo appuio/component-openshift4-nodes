@@ -1,0 +1,79 @@
+apiVersion: managedupgrade.appuio.io/v1beta1
+kind: UpgradeJobHook
+metadata:
+  name: enable-downscaling
+  namespace: appuio-openshift-upgrade-controller
+spec:
+  events:
+    - Start
+  selector:
+    matchLabels:
+      foo: 'true'
+  template:
+    spec:
+      template:
+        spec:
+          containers:
+            - command:
+                - oc
+                - patch
+                - clusterautoscalers
+                - default
+                - --type
+                - merge
+                - -p
+                - '{"spec":{"scaleDown":{"enabled": true}}}'
+              env:
+                - name: HOME
+                  value: /home/downscaler
+              image: quay.io/appuio/oc:v4.20
+              imagePullPolicy: IfNotPresent
+              name: autoscale-enabler
+              volumeMounts:
+                - mountPath: /home/downscaler
+                  name: home
+          restartPolicy: Never
+          serviceAccountName: hook-manager
+          volumes:
+            - emptyDir: {}
+              name: home
+---
+apiVersion: managedupgrade.appuio.io/v1beta1
+kind: UpgradeJobHook
+metadata:
+  name: disable-downscaling
+  namespace: appuio-openshift-upgrade-controller
+spec:
+  events:
+    - Finish
+  selector:
+    matchLabels:
+      foo: 'true'
+  template:
+    spec:
+      template:
+        spec:
+          containers:
+            - command:
+                - oc
+                - patch
+                - clusterautoscalers
+                - default
+                - --type
+                - merge
+                - -p
+                - '{"spec":{"scaleDown":{"enabled": true}}}'
+              env:
+                - name: HOME
+                  value: /home/downscaler
+              image: quay.io/appuio/oc:v4.20
+              imagePullPolicy: IfNotPresent
+              name: autoscale-disabler
+              volumeMounts:
+                - mountPath: /home/downscaler
+                  name: home
+          restartPolicy: Never
+          serviceAccountName: hook-manager
+          volumes:
+            - emptyDir: {}
+              name: home

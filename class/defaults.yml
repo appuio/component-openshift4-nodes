@@ -110,6 +110,9 @@ parameters:
         enableExpression: '0 22 * * 2'
         disableExpression: '0 1 * * 3'
         timeZone: 'Europe/Zurich'
+      upgradejobhooks:
+        enabled: false
+        upgrade_job_selector: {}
 
     machineConfigPools:
       infra: {}
