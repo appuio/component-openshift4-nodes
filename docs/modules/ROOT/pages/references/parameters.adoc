@@ -431,6 +431,7 @@ type:: bool
 default:: `false`
 
 Whether to enable scheduled downscaling.
+Make sure `autoscaling.ignoreDownscalingSync` is set to true when using the scheduled downscaling.
 
 === `autoscaling.schedule.enableExpression`
 
@@ -455,6 +456,23 @@ type:: string
 default:: `Europe/Zurich`
 
 The time zone to use for scheduled downscaling.
+
+=== `autoscaling.upgradejobhooks.enabled`
+
+[horizontal]
+type:: bool
+default:: `false`
+
+Whether to enable upgradejobhooks that enable downscaling during the maintenance.
+Make sure `autoscaling.ignoreDownscalingSync` is set to true when using the downscaling upgradejobhooks.
+
+=== `autoscaling.upgradejobhooks.upgrade_job_selector`
+
+[horizontal]
+type:: dictionary
+default:: `{}`
+
+Selector for the upgradejobs that should execute the hooks.
 
 === Example configuration
 

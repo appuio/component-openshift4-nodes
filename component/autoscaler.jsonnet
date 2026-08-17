@@ -5,6 +5,7 @@ local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 
 local params = inv.parameters.openshift4_nodes;
+local params_upgrade_controller = inv.parameters.openshift_upgrade_controller;
 local metrics = import 'autoscaling-metrics.libsonnet';
 
 local autoscalerArgsPatch = if params.autoscaling.addAutoscalerArgs != null && std.length(params.autoscaling.addAutoscalerArgs) > 0 then
@@ -228,6 +229,58 @@ local autoscalerClusterRoleBinding = kube.ClusterRoleBinding('scheduled-downscal
   ],
 };
 
+local autoscalerServiceAccount = kube.ServiceAccount('scheduled-downscaler') {
+  metadata+: {
+    namespace: params.machineApiNamespace,
+  },
+};
+
+local enableDownscalerJobSpec(name, enabled, sa) = {
+  spec: {
+    template: {
+      spec: {
+        serviceAccountName: sa,
+        containers: [
+          {
+            name: 'autoscale-' + name + 'r',
+            image: '%(registry)s/%(repository)s:%(tag)s' % params.images.oc,
+            imagePullPolicy: 'IfNotPresent',
+            command: [
+              'oc',
+              'patch',
+              'clusterautoscalers',
+              'default',
+              '--type',
+              'merge',
+              '-p',
+              '{"spec":{"scaleDown":{"enabled": ' + enabled + '}}}',
+            ],
+            env: [
+              {
+                name: 'HOME',
+                value: '/home/downscaler',
+              },
+            ],
+            volumeMounts: [
+              {
+                name: 'home',
+                mountPath: '/home/downscaler',
+              },
+            ],
+          },
+        ],
+        volumes: [
+          {
+            name: 'home',
+            emptyDir: {},
+          },
+        ],
+        restartPolicy: 'Never',
+      },
+    },
+  },
+};
+
 // Create base CronJob function
 local scheduledDownscalerCronJob(name, schedule, timeZone, enabled) = kube.CronJob('scheduled-downscaler-' + name) {
   metadata+: {
@@ -236,57 +289,43 @@ local scheduledDownscalerCronJob(name, schedule, timeZone, enabled) = kube.CronJ
   spec+: {
     schedule: schedule,
     timeZone: timeZone,
-    jobTemplate: {
-      spec: {
-        template: {
-          spec: {
-            serviceAccountName: 'scheduled-downscaler',
-            containers: [
-              {
-                name: 'autoscale-' + name + 'r',
-                image: '%(registry)s/%(repository)s:%(tag)s' % params.images.oc,
-                imagePullPolicy: 'IfNotPresent',
-                command: [
-                  'oc',
-                  'patch',
-                  'clusterautoscalers',
-                  'default',
-                  '--type',
-                  'merge',
-                  '-p',
-                  '{"spec":{"scaleDown":{"enabled": ' + enabled + '}}}',
-                ],
-                env: [
-                  {
-                    name: 'HOME',
-                    value: '/home/downscaler',
-                  },
-                ],
-                volumeMounts: [
-                  {
-                    name: 'home',
-                    mountPath: '/home/downscaler',
-                  },
-                ],
-              },
-            ],
-            volumes: [
-              {
-                name: 'home',
-                emptyDir: {},
-              },
-            ],
-            restartPolicy: 'Never',
-          },
-        },
-      },
-    },
+    jobTemplate: enableDownscalerJobSpec(name, enabled, autoscalerServiceAccount.metadata.name),
   },
 };
 
 // Create the enable and disable jobs using the base function
 local enableDownscalerCronJob = scheduledDownscalerCronJob('enable', params.autoscaling.schedule.enableExpression, params.autoscaling.schedule.timeZone, true);
 local disableDownscalerCronJob = scheduledDownscalerCronJob('disable', params.autoscaling.schedule.disableExpression, params.autoscaling.schedule.timeZone, false);
+
+
+local enableHook = {
+  apiVersion: 'managedupgrade.appuio.io/v1beta1',
+  kind: 'UpgradeJobHook',
+  metadata: {
+    name: 'enable-downscaling',
+    namespace: params_upgrade_controller.namespace,
+  },
+  spec: {
+    selector: params.autoscaling.upgradejobhooks.upgrade_job_selector,
+    events: [ 'Start' ],
+    template: enableDownscalerJobSpec('enable', true, 'hook-manager'),
+  },
+};
+
+local disableHook = {
+  apiVersion: 'managedupgrade.appuio.io/v1beta1',
+  kind: 'UpgradeJobHook',
+  metadata: {
+    name: 'disable-downscaling',
+    namespace: params_upgrade_controller.namespace,
+  },
+  spec: {
+    selector: params.autoscaling.upgradejobhooks.upgrade_job_selector,
+    events: [ 'Finish' ],
+    template: enableDownscalerJobSpec('disable', true, 'hook-manager'),
+  },
+};
+
 
 // Deploy missing 4.19 autoscaler RBAC
 local extraRBAC = [
@@ -355,6 +394,11 @@ if params.autoscaling.enabled then
       autoscalerClusterRoleBinding,
       enableDownscalerCronJob,
       disableDownscalerCronJob,
+    ],
+    [if params.autoscaling.upgradejobhooks.enabled then
+      'downscale_upgradejobhooks']: [
+      enableHook,
+      disableHook,
     ],
     ignoreDifferences:: ignoreDifferences,
     [if params.autoscaling.customMetrics.enabled then
