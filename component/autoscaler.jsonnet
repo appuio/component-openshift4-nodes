@@ -322,7 +322,7 @@ local disableHook = {
   spec: {
     selector: params.autoscaling.upgradejobhooks.upgrade_job_selector,
     events: [ 'Finish' ],
-    template: enableDownscalerJobSpec('disable', true, 'hook-manager'),
+    template: enableDownscalerJobSpec('disable', false, 'hook-manager'),
   },
 };
 

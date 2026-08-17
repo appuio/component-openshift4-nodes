@@ -62,7 +62,7 @@ spec:
                 - --type
                 - merge
                 - -p
-                - '{"spec":{"scaleDown":{"enabled": true}}}'
+                - '{"spec":{"scaleDown":{"enabled": false}}}'
               env:
                 - name: HOME
                   value: /home/downscaler
