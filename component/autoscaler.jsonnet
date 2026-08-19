@@ -76,13 +76,11 @@ local priorityExpanderConfigmap =
     };
 
 local clusterAutoscaler =
-  kube._Object(
-    'autoscaling.openshift.io/v1',
-    'ClusterAutoscaler',
-    'default'
-  ) {
-    spec: {
-      podPriorityThreshold: -10,
+  local resourceLimitsDefaults =
+    // Only include legacy default resourceLimits if any resourceLimits are
+    // customized via params for backward compatibility
+    if 'resourceLimits' in params.autoscaling.clusterAutoscaler
+       && params.autoscaling.clusterAutoscaler.resourceLimits != null then {
       resourceLimits: {
         maxNodesTotal: 24,
         cores: {
@@ -94,6 +92,14 @@ local clusterAutoscaler =
           max: 256,
         },
       },
+    } else {};
+  kube._Object(
+    'autoscaling.openshift.io/v1',
+    'ClusterAutoscaler',
+    'default'
+  ) {
+    spec: {
+      podPriorityThreshold: -10,
       logVerbosity: 1,
       scaleDown: {
         enabled: true,
@@ -110,7 +116,7 @@ local clusterAutoscaler =
           [ 'Priority' ]
         else
           [ 'Random' ],
-    } + com.makeMergeable(params.autoscaling.clusterAutoscaler),
+    } + resourceLimitsDefaults + com.makeMergeable(params.autoscaling.clusterAutoscaler),
   } +
   {
     spec+: {

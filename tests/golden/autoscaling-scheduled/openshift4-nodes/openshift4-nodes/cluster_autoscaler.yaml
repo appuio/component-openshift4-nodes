@@ -14,7 +14,7 @@ spec:
     cores:
       max: 128
       min: 8
-    maxNodesTotal: 24
+    maxNodesTotal: 1000
     memory:
       max: 256
       min: 4
