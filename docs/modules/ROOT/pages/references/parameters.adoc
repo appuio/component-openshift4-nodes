@@ -351,14 +351,6 @@ The component deploys the following default `ClusterAutoscaler` `.spec`:
 ----
 spec:
   podPriorityThreshold: -10
-  resourceLimits:
-    maxNodesTotal: 24
-    cores:
-      min: 8
-      max: 128
-    memory:
-      min: 4
-      max: 256
   logVerbosity: 1
   scaleDown:
     enabled: true
@@ -375,6 +367,24 @@ See the upstream https://docs.openshift.com/container-platform/4.16/machine_mana
 NOTE: The component doesn't validate the provided configuration.
 
 NOTE: The fields in the cluster autoscaler's `spec.resourceLimits` must be configured to account for the non-autoscaled nodes in the cluster, such as control plane nodes, since they'll also count against the overall cluster size.
+
+
+[NOTE]
+====
+If any of the fields in `spec.resourceLimits` are configured, the component injects the following "legacy" default values before merging:
+[source,yaml]
+----
+spec:
+  resourceLimits:
+    maxNodesTotal: 24
+    cores:
+      min: 8
+      max: 128
+    memory:
+      min: 4
+      max: 256
+----
+====
 
 === `autoscaling.machineAutoscalers`
 
