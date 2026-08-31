@@ -22,8 +22,6 @@ parameters:
       enabled: true
       ignoreDownscalingSync: true
       clusterAutoscaler:
-        resourceLimits:
-          maxNodesTotal: 1000
         scaleDown:
           enabled: false
       machineAutoscalers:

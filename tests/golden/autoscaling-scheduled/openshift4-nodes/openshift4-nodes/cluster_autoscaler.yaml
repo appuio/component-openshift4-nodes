@@ -10,8 +10,6 @@ spec:
     - Random
   logVerbosity: 1
   podPriorityThreshold: -10
-  resourceLimits:
-    maxNodesTotal: 1000
   scaleDown:
     delayAfterAdd: 10m
     delayAfterDelete: 5m
