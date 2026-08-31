@@ -26,7 +26,7 @@ spec:
               env:
                 - name: HOME
                   value: /home/downscaler
-              image: quay.io/appuio/oc:v4.20
+              image: quay.io/appuio/oc:v4.21
               imagePullPolicy: IfNotPresent
               name: autoscale-enabler
               volumeMounts:
@@ -66,7 +66,7 @@ spec:
               env:
                 - name: HOME
                   value: /home/downscaler
-              image: quay.io/appuio/oc:v4.20
+              image: quay.io/appuio/oc:v4.21
               imagePullPolicy: IfNotPresent
               name: autoscale-disabler
               volumeMounts:

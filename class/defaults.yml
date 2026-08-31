@@ -154,7 +154,7 @@ parameters:
       oc:
         registry: quay.io
         repository: appuio/oc
-        tag: v4.20
+        tag: v4.21
 
     capacityAlerts:
       enabled: false
