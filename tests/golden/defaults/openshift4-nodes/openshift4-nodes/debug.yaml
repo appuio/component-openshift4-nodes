@@ -6,4 +6,8 @@ metadata:
     scheduler.alpha.kubernetes.io/defaultTolerations: '[{"operator":"Exists"}]'
   labels:
     name: syn-debug-nodes
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: privileged
+    security.openshift.io/scc.podSecurityLabelSync: 'false'
   name: syn-debug-nodes
