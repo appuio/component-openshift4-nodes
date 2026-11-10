@@ -740,6 +740,7 @@ default:: `syn-debug-nodes`
 
 The namespace to create for `oc debug node/<nodename>`.
 This namespace is annotated to ensure that debug pods can be scheduled on any nodes.
+Additionally, the namespace is configured with Pod Security Standard `privileged` which is required for the pods created by `oc debug node`.
 
 Use `oc debug node/<nodename> --to syn-debug-nodes` to create the debug pods in the namespace.
 
