@@ -68,7 +68,7 @@ local addMachineSets(metric) =
   {
     metric: metric,
     labelList: 'machineset',
-    machinesetQuery: relabelMachineSets('label_replace(openshift_upgrade_controller_machine_info, "node", "$1", "node_ref", "(.+)")'),
+    machinesetQuery: relabelMachineSets('label_replace(max without (pod, instance) (openshift_upgrade_controller_machine_info), "node", "$1", "node_ref", "(.+)")'),
   };
 
 local renameNodeLabel(expression, nodeLabel) =
@@ -86,7 +86,7 @@ local filterWorkerNodesByMachineSet(metric, machineSetFilter=machineSetFilter, n
   {
     metric: renameNodeLabel(metric, nodeLabel),
     labelList: 'machineset',
-    machinesetQuery: relabelMachineSets('label_replace(openshift_upgrade_controller_machine_info{machineset=~"%(machineSetFilter)s"}, "node", "$1", "node_ref", "(.+)")' % { machineSetFilter: machineSetFilter }),
+    machinesetQuery: relabelMachineSets('label_replace(max without (pod, instance) (openshift_upgrade_controller_machine_info{machineset=~"%(machineSetFilter)s"}), "node", "$1", "node_ref", "(.+)")' % { machineSetFilter: machineSetFilter }),
   };
 
 local filterWorkerNodesByRole(metric, workerRole=nodeRoleFilter, nodeLabel='node') =
@@ -138,15 +138,15 @@ local adjustForAutoScaling(freeResourceMetric, capacityPerNode, nodeLabel='node'
 
   if useMachineSets then
     if hasAutoScaling then
-      local currentNodeCountMetricBase = 'label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)")';
-      local machinesetMaxSizeBase = 'max by(machineset) (component_openshift4_nodes_machineset_replicas_max or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
-      local machinesetMinSizeBase = 'min by(machineset) (component_openshift4_nodes_machineset_replicas_min or on(machineset) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+      local currentNodeCountMetricBase = 'label_replace(max without (pod, instance) (mapi_machine_set_status_replicas_available), "machineset", "$1", "name", "(.+)")';
+      local machinesetMaxSizeBase = 'max by(machineset) (component_openshift4_nodes_machineset_replicas_max or on(machineset) label_replace(max without (pod, instance) (mapi_machine_set_status_replicas_available), "machineset", "$1", "name", "(.+)"))';
+      local machinesetMinSizeBase = 'min by(machineset) (component_openshift4_nodes_machineset_replicas_min or on(machineset) label_replace(max without (pod, instance) (mapi_machine_set_status_replicas_available), "machineset", "$1", "name", "(.+)"))';
 
       // NOTE(aa): When we're aggregating multiple actual machinesets together, we later on change the label values on the result of the above query. (e.g. change all machinesets `app-.*` to `app`)
       //           That leads to duplicate label sets - to avoid this, we need a version of this query that has another label which can stay unique.
       //           The below "DualLabel" variant of the above query keeps the original "name" label with the same value as "machineset". In a later aggregation this label disappears again.
-      local machinesetMaxSizeDualLabel = 'max by(machineset, name) (label_replace(component_openshift4_nodes_machineset_replicas_max, "name", "$1", "machineset", "(.+)") or on(machineset, name) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
-      local machinesetMinSizeDualLabel = 'min by(machineset, name) (label_replace(component_openshift4_nodes_machineset_replicas_min, "name", "$1", "machineset", "(.+)") or on(machineset, name) label_replace(mapi_machine_set_status_replicas_available, "machineset", "$1", "name", "(.+)"))';
+      local machinesetMaxSizeDualLabel = 'max by(machineset, name) (label_replace(component_openshift4_nodes_machineset_replicas_max, "name", "$1", "machineset", "(.+)") or on(machineset, name) label_replace(max without (pod, instance) (mapi_machine_set_status_replicas_available), "machineset", "$1", "name", "(.+)"))';
+      local machinesetMinSizeDualLabel = 'min by(machineset, name) (label_replace(component_openshift4_nodes_machineset_replicas_min, "name", "$1", "machineset", "(.+)") or on(machineset, name) label_replace(max without (pod, instance) (mapi_machine_set_status_replicas_available), "machineset", "$1", "name", "(.+)"))';
 
       // If we're trying to aggregate multiple actual machinesets, sum up their maxima/minima - otherwise return the base query.
       local machinesetMaxSizeAggregated = if std.length(params.capacityAlerts.aggregateMachineSets) == 0 then machinesetMaxSizeBase else ('sum by (machineset) (%(relabeled)s)' % { relabeled: relabelMachineSets(machinesetMaxSizeDualLabel) });
